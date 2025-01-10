@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { OTPInput } from "@/components/ui/otp-input"
-import { useRequestOtp, useVerifyOtp } from "@/lib/queries"
+import { useRequestOtp, useVerifyOtp } from "@/hooks/use-auth"
 import { useAuthStore } from "@/store/auth-store"
-import { setAuthTokens } from "@/lib/auth"
 
 type Channel = 'email' | 'phone'
 
@@ -19,7 +18,7 @@ interface ApiError {
 
 export default function LoginPage() {
   const router = useRouter()
-  const { setUser } = useAuthStore()
+  const { setUser, setTokens } = useAuthStore()
   const requestOtpMutation = useRequestOtp()
   const verifyOtpMutation = useVerifyOtp()
   const [channel, setChannel] = useState<Channel>('email')
@@ -53,7 +52,7 @@ export default function LoginPage() {
         ...(channel === 'phone' && { countryCode })
       })
       
-      setAuthTokens(data)
+      setTokens(data)
       setUser(data.user)
       router.push("/dashboard")
     } catch (error) {

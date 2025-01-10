@@ -6,24 +6,26 @@ import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sideb
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
 import { Avatar } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/auth-store"
-import { useUser } from "@/lib/queries"
-import { clearAuthTokens } from "@/lib/auth"
+import { useUser } from "@/hooks/use-auth"
 import React from "react"
 
 export function AppSidebar() {
   const router = useRouter()
-  const { user, setUser } = useAuthStore()
+  const { user, setUser, isAuthenticated, clearAuth } = useAuthStore()
   const { data } = useUser()
 
   React.useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
     if (data) {
       setUser(data)
     }
-  }, [data, setUser])
+  }, [data, setUser, isAuthenticated, router])
 
   const handleLogout = () => {
-    clearAuthTokens()
-    setUser(null)
+    clearAuth()
     router.push("/login")
   }
 
