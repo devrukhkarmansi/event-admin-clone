@@ -1,58 +1,29 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Home, Calendar, Users, LayoutGrid, Settings, LogOut } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
-import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
-import { clearAuthTokens, TokenError, isAuthenticated } from "@/lib/auth"
-import { api } from "@/lib/api"
 import { Avatar } from "@/components/ui/avatar"
-
-interface User {
-  firstName: string;
-  lastName: string;
-  email: string;
-  profileImage?: {
-    url: string;
-  }
-}
+import { useAuthStore } from "@/store/auth-store"
+import { useUser } from "@/lib/queries"
+import { clearAuthTokens } from "@/lib/auth"
+import React from "react"
 
 export function AppSidebar() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { user, setUser } = useAuthStore()
+  const { data } = useUser()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!isAuthenticated()) {
-        router.push('/login')
-        return
-      }
-
-      try {
-        const response = await api.get('/user/me')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data')
-        }
-
-        const data = await response.json()
-        setUser(data)
-      } catch (error) {
-        if (error instanceof TokenError) {
-          clearAuthTokens()
-          router.push('/login')
-          return
-        }
-        console.error('Failed to fetch user:', error)
-      }
+  React.useEffect(() => {
+    if (data) {
+      setUser(data)
     }
-
-    fetchUser()
-  }, [router])
+  }, [data, setUser])
 
   const handleLogout = () => {
     clearAuthTokens()
+    setUser(null)
     router.push("/login")
   }
 
