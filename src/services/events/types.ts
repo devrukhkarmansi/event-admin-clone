@@ -41,9 +41,11 @@ export interface CreateSponsorParams {
   name: string;
   type: SponsorType;
   description?: string;
-  logo?: File;
+  logoId?: number;
 }
 
 export interface UpdateSponsorParams extends Partial<CreateSponsorParams> {
   id: string | number;
-} 
+}
+
+export type SponsorsResponse = Sponsor[] 

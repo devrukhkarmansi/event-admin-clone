@@ -1,13 +1,14 @@
 'use client'
 
-import { useEvent } from '@/hooks/use-events'
+import { useEvent, useSponsors, useDeleteSponsor } from '@/hooks/use-events'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Plus, Pencil, Trash2, ImageIcon } from 'lucide-react'
-import { SponsorType } from '@/services/events/types'
+import { Trash2, ImageIcon } from 'lucide-react'
+import { SponsorType, Sponsor } from '@/services/events/types'
+import { SponsorFormDialog } from "@/components/sponsors/sponsor-form-dialog"
 
 const sponsorTypeStyles = {
   [SponsorType.PLATINUM]: 'bg-violet-100 text-violet-800',
@@ -24,10 +25,22 @@ const formatSponsorType = (type: SponsorType) => {
 }
 
 export default function EventPage() {
-  const { data: event, isLoading } = useEvent()
+  const { data: event, isLoading: eventLoading } = useEvent()
+  const { data: sponsors, isLoading: sponsorsLoading } = useSponsors()
+  const deleteSponsor = useDeleteSponsor()
 
-  if (isLoading) return <div>Loading...</div>
+  if (eventLoading || sponsorsLoading) return <div>Loading...</div>
   if (!event) return <div>Event not found</div>
+
+  const handleDelete = async (id: string | number) => {
+    if (confirm('Are you sure you want to delete this sponsor?')) {
+      try {
+        await deleteSponsor.mutateAsync(id)
+      } catch (error) {
+        console.error('Failed to delete sponsor:', error)
+      }
+    }
+  }
 
   return (
     <div className="p-6">
@@ -97,10 +110,7 @@ export default function EventPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Sponsors</CardTitle>
-            <Button variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Sponsor
-            </Button>
+            <SponsorFormDialog mode="create" />
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -115,10 +125,10 @@ export default function EventPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {event.sponsors?.map((sponsor) => (
+                  {sponsors?.map((sponsor: Sponsor) => (
                     <tr key={sponsor.id} className="border-b">
                       <td className="p-4">
-                        {sponsor.logo ? (
+                        {sponsor.logo?.url ? (
                           <Image
                             src={sponsor.logo.url}
                             alt={sponsor.name}
@@ -145,10 +155,13 @@ export default function EventPage() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                          <SponsorFormDialog mode="edit" sponsor={sponsor} />
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-500 hover:text-red-600"
+                            onClick={() => handleDelete(sponsor.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import { CreateSponsorParams, Event, UpdateSponsorParams } from './types'
+import { CreateSponsorParams, Event, SponsorsResponse, UpdateSponsorParams } from './types'
 import { PaginatedResponse } from '../common/types'
 
 export const eventsService = {
@@ -19,17 +19,29 @@ export const eventsService = {
   },
 
   createSponsor: async (data: CreateSponsorParams) => {
-    const response = await api.post('/sponsors', data as unknown as Record<string, unknown>)
+    const { type, ...rest } = data;
+    const requestData = {
+      ...rest,
+      sponsorType: type,
+    }
+
+    const response = await api.post('/admin/sponsor', requestData as unknown as Record<string, unknown>)
     return response.json()
   },
 
   updateSponsor: async (data: UpdateSponsorParams) => {
-    const response = await api.patch(`/sponsors/${data.id}`, data as unknown as Record<string, unknown>)
+    const { type, id, ...rest } = data;
+    const requestData = {
+      ...rest,
+      sponsorType: type,
+    }
+
+    const response = await api.put(`/admin/sponsor/${id}`, requestData as unknown as Record<string, unknown>)
     return response.json()
   },
 
   deleteSponsor: async (id: string | number) => {
-    const response = await api.delete(`/sponsors/${id}`)
+    const response = await api.delete(`/admin/sponsor/${id}`)
     return response.json()
   },
 
@@ -37,6 +49,16 @@ export const eventsService = {
     const formData = new FormData()
     formData.append('logo', logo)
     const response = await api.patch(`/sponsors/${id}/logo`, formData)
+    return response.json()
+  },
+
+  getSponsor: async (id: string | number) => {
+    const response = await api.get(`/sponsor/${id}`)
+    return response.json()
+  },
+
+  getSponsors: async (): Promise<SponsorsResponse> => {
+    const response = await api.get('/sponsor')
     return response.json()
   }
 } 

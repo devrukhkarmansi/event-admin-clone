@@ -69,6 +69,13 @@ export const api = {
     })
   },
 
+  put: (endpoint: string, data: Record<string, unknown> | FormData) => {
+    return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+      method: 'PUT',
+      data,
+    })
+  },
+
   patch: (endpoint: string, data: Record<string, unknown> | FormData) => 
     fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'PATCH',

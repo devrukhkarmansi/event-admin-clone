@@ -16,7 +16,7 @@ export function useCreateSponsor() {
   return useMutation({
     mutationFn: (data: CreateSponsorParams) => eventsService.createSponsor(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event'] })
+      queryClient.invalidateQueries({ queryKey: ['sponsors'] })
     },
   })
 }
@@ -27,7 +27,7 @@ export function useUpdateSponsor() {
   return useMutation({
     mutationFn: (data: UpdateSponsorParams) => eventsService.updateSponsor(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event'] })
+      queryClient.invalidateQueries({ queryKey: ['sponsors'] })
     },
   })
 }
@@ -36,9 +36,9 @@ export function useDeleteSponsor() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (id: string) => eventsService.deleteSponsor(id),
+    mutationFn: (id: string | number) => eventsService.deleteSponsor(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event'] })
+      queryClient.invalidateQueries({ queryKey: ['sponsors'] })
     },
   })
 }
@@ -52,5 +52,19 @@ export function useUploadSponsorLogo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event'] })
     },
+  })
+}
+
+export function useSponsor(id: string | number) {
+  return useQuery({
+    queryKey: ['sponsor', id],
+    queryFn: () => eventsService.getSponsor(id),
+  })
+}
+
+export function useSponsors() {
+  return useQuery({
+    queryKey: ['sponsors'],
+    queryFn: () => eventsService.getSponsors(),
   })
 } 
