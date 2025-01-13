@@ -1,0 +1,3417 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+      "/": {
+        "get": {
+          "operationId": "AppController_getHello",
+          "summary": "Health check endpoint",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Application health status",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "example": {
+                      "status": "success",
+                      "message": "Hello World! API is running."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Health Check"
+          ]
+        }
+      },
+      "/api/v1/auth/request-otp": {
+        "post": {
+          "operationId": "AuthController_requestOTP",
+          "summary": "Request OTP",
+          "description": "Request an OTP via email or phone. Country code is required for phone numbers.",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOTPDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OTP sent successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "example": "OTP sent to your email/phone"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request - Missing country code for phone channel"
+            },
+            "404": {
+              "description": "User not found"
+            }
+          },
+          "tags": [
+            "Authentication"
+          ]
+        }
+      },
+      "/api/v1/auth/verify-otp": {
+        "post": {
+          "operationId": "AuthController_verifyOTP",
+          "summary": "Verify OTP",
+          "description": "Verify OTP received via email or phone. Country code is required for phone numbers.",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOTPDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OTP verified successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "access_token": {
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      },
+                      "refresh_token": {
+                        "type": "string",
+                        "example": "6d76c65d-1234-4567-8901-cf46a8369f65"
+                      },
+                      "user": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "1"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "user@example.com"
+                          },
+                          "firstName": {
+                            "type": "string",
+                            "example": "John"
+                          },
+                          "lastName": {
+                            "type": "string",
+                            "example": "Doe"
+                          },
+                          "role": {
+                            "type": "string",
+                            "example": "user"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid OTP or missing country code for phone channel"
+            },
+            "404": {
+              "description": "User not found"
+            }
+          },
+          "tags": [
+            "Authentication"
+          ]
+        }
+      },
+      "/api/v1/auth/refresh": {
+        "post": {
+          "operationId": "AuthController_refreshToken",
+          "summary": "Refresh access token",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Token refreshed successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "access_token": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Invalid refresh token"
+            }
+          },
+          "tags": [
+            "Authentication"
+          ]
+        }
+      },
+      "/api/v1/auth/logout": {
+        "post": {
+          "operationId": "AuthController_logout",
+          "summary": "Logout user",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Logged out successfully"
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "tags": [
+            "Authentication"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/user/me": {
+        "get": {
+          "operationId": "UserController_getCurrentUser",
+          "summary": "Get current user profile",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "User profile retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "firstName": {
+                        "type": "string",
+                        "description": "First name of the user (empty string if not set)",
+                        "example": "John"
+                      },
+                      "lastName": {
+                        "type": "string",
+                        "description": "Last name of the user (empty string if not set)",
+                        "example": "Doe"
+                      },
+                      "isActive": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "profileImageId": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "bio": {
+                        "type": "string",
+                        "description": "User bio (empty string if not set)",
+                        "example": "Full stack developer"
+                      },
+                      "phoneNumber": {
+                        "type": "string",
+                        "description": "User phone number (empty string if not set)",
+                        "example": "+1234567890"
+                      },
+                      "countryCode": {
+                        "type": "string",
+                        "description": "country code (empty string if not set)",
+                        "example": "+91"
+                      },
+                      "role": {
+                        "type": "string",
+                        "description": "User role name (empty string if not set)",
+                        "example": "admin"
+                      },
+                      "company": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "User not found"
+            }
+          },
+          "tags": [
+            "User"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "put": {
+          "operationId": "UserController_updateCurrentUser",
+          "summary": "Update current user profile",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "User profile updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "firstName": {
+                        "type": "string"
+                      },
+                      "lastName": {
+                        "type": "string"
+                      },
+                      "profileImageId": {
+                        "type": "number"
+                      },
+                      "bio": {
+                        "type": "string"
+                      },
+                      "phoneNumber": {
+                        "type": "string"
+                      },
+                      "countryCode": {
+                        "type": "string"
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid input data"
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "tags": [
+            "User"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/user/me/company": {
+        "get": {
+          "operationId": "UserController_getUserCompany",
+          "summary": "Get current user's company",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Company retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "website": {
+                        "type": "string"
+                      },
+                      "logo": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Company not found"
+            }
+          },
+          "tags": [
+            "User"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/user": {
+        "get": {
+          "operationId": "UserController_findAll",
+          "summary": "Get all users (public view)",
+          "description": "Returns all users except the current user. Email and phone only shown for connected users.",
+          "parameters": [
+            {
+              "name": "search",
+              "required": false,
+              "in": "query",
+              "description": "Search users by name, bio, or company name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "required": false,
+              "in": "query",
+              "description": "Page number (default: 1)",
+              "schema": {
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "in": "query",
+              "description": "Items per page (default: 10, max: 100)",
+              "schema": {
+                "default": 10,
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of users with limited information",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "firstName": {
+                              "type": "string"
+                            },
+                            "lastName": {
+                              "type": "string"
+                            },
+                            "bio": {
+                              "type": "string"
+                            },
+                            "profileImageUrl": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "isConnected": {
+                              "type": "boolean"
+                            },
+                            "email": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "phoneNumber": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "company": {
+                              "type": "object",
+                              "nullable": true,
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "website": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "logoUrl": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "description": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "meta": {
+                        "type": "object",
+                        "properties": {
+                          "totalItems": {
+                            "type": "number"
+                          },
+                          "itemCount": {
+                            "type": "number"
+                          },
+                          "itemsPerPage": {
+                            "type": "number"
+                          },
+                          "totalPages": {
+                            "type": "number"
+                          },
+                          "currentPage": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "User"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/role": {
+        "get": {
+          "operationId": "RoleController_findAll",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Role"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/permission": {
+        "get": {
+          "operationId": "PermissionController_findAll",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Permission"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/user": {
+        "get": {
+          "operationId": "AdminUserController_findAll",
+          "summary": "Get all users (admin view)",
+          "description": "Returns complete information for all users. Admin access required.",
+          "parameters": [
+            {
+              "name": "search",
+              "required": false,
+              "in": "query",
+              "description": "Search users by name, email, bio, or company name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "required": false,
+              "in": "query",
+              "description": "Page number (default: 1)",
+              "schema": {
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "in": "query",
+              "description": "Items per page (default: 10, max: 100)",
+              "schema": {
+                "default": 10,
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of all users with complete information",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "firstName": {
+                              "type": "string"
+                            },
+                            "lastName": {
+                              "type": "string"
+                            },
+                            "bio": {
+                              "type": "string"
+                            },
+                            "profileImageUrl": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phoneNumber": {
+                              "type": "string"
+                            },
+                            "isActive": {
+                              "type": "boolean"
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "company": {
+                              "type": "object",
+                              "nullable": true,
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "website": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "logoUrl": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "description": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "meta": {
+                        "type": "object",
+                        "properties": {
+                          "totalItems": {
+                            "type": "number"
+                          },
+                          "itemCount": {
+                            "type": "number"
+                          },
+                          "itemsPerPage": {
+                            "type": "number"
+                          },
+                          "totalPages": {
+                            "type": "number"
+                          },
+                          "currentPage": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Admin - User"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/user/import": {
+        "post": {
+          "operationId": "AdminUserController_importUsers",
+          "summary": "Import users from CSV",
+          "description": "Import users and send them invite emails automatically",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "CSV file containing user data"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Users imported successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      },
+                      "successCount": {
+                        "type": "number"
+                      },
+                      "failedCount": {
+                        "type": "number"
+                      },
+                      "details": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Admin - User"
+          ]
+        }
+      },
+      "/api/v1/admin/permission": {
+        "post": {
+          "operationId": "AdminPermissionController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePermissionDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Permission"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/role": {
+        "post": {
+          "operationId": "AdminRoleController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRoleDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Role"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/role/{roleId}/user/{userId}": {
+        "post": {
+          "operationId": "AdminRoleController_assignRoleToUser",
+          "parameters": [
+            {
+              "name": "roleId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "userId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Role"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/media/upload": {
+        "post": {
+          "operationId": "MediaController_uploadFile",
+          "summary": "Upload a media file",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "Media file to upload"
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "description": "Type of the media"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Media uploaded successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Media"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request"
+            }
+          },
+          "tags": [
+            "Media"
+          ]
+        }
+      },
+      "/api/v1/media/{id}": {
+        "get": {
+          "operationId": "MediaController_findOne",
+          "summary": "Get media by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Media found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Media"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Media not found"
+            }
+          },
+          "tags": [
+            "Media"
+          ]
+        },
+        "delete": {
+          "operationId": "MediaController_delete",
+          "summary": "Delete media by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Media deleted successfully"
+            },
+            "404": {
+              "description": "Media not found"
+            }
+          },
+          "tags": [
+            "Media"
+          ]
+        }
+      },
+      "/api/v1/media": {
+        "put": {
+          "operationId": "MediaController_update",
+          "summary": "Update media by ID",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "Media file to upload"
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "description": "Type of the media"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Media updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Media"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request"
+            },
+            "404": {
+              "description": "Media not found"
+            }
+          },
+          "tags": [
+            "Media"
+          ]
+        },
+        "get": {
+          "operationId": "MediaController_findAll",
+          "summary": "Get all media items",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "List of all media items",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Media"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Media"
+          ]
+        }
+      },
+      "/api/v1/company": {
+        "post": {
+          "operationId": "CompanyController_create",
+          "summary": "Create a new company",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCompanyDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Company created successfully"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "409": {
+              "description": "User already has a company"
+            }
+          },
+          "tags": [
+            "Company"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "put": {
+          "operationId": "CompanyController_update",
+          "summary": "Update current user's company",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "description": "Fields are optional. Only provided fields will be updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCompanyDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Company updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Company name (unchanged if not provided)"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Company description (unchanged if not provided)"
+                      },
+                      "website": {
+                        "type": "string",
+                        "description": "Company website URL (unchanged if not provided)"
+                      },
+                      "logo": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid input data"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Company not found or not associated with user"
+            }
+          },
+          "tags": [
+            "Company"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/company/{id}": {
+        "get": {
+          "operationId": "CompanyController_findOne",
+          "summary": "Get company by id",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Company ID",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Company found"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Company not found"
+            }
+          },
+          "tags": [
+            "Company"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/health": {
+        "get": {
+          "operationId": "HealthController_check",
+          "summary": "Check system health",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "The Health Check is successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "ok"
+                      },
+                      "info": {
+                        "type": "object",
+                        "example": {
+                          "database": {
+                            "status": "up"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        },
+                        "nullable": true
+                      },
+                      "error": {
+                        "type": "object",
+                        "example": {
+  
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        },
+                        "nullable": true
+                      },
+                      "details": {
+                        "type": "object",
+                        "example": {
+                          "database": {
+                            "status": "up"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "503": {
+              "description": "The Health Check is not successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "error"
+                      },
+                      "info": {
+                        "type": "object",
+                        "example": {
+                          "database": {
+                            "status": "up"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        },
+                        "nullable": true
+                      },
+                      "error": {
+                        "type": "object",
+                        "example": {
+                          "redis": {
+                            "status": "down",
+                            "message": "Could not connect"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        },
+                        "nullable": true
+                      },
+                      "details": {
+                        "type": "object",
+                        "example": {
+                          "database": {
+                            "status": "up"
+                          },
+                          "redis": {
+                            "status": "down",
+                            "message": "Could not connect"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "status"
+                          ],
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Health"
+          ]
+        }
+      },
+      "/api/v1/session": {
+        "get": {
+          "operationId": "SessionController_findSessions",
+          "summary": "Find sessions with filters and sorting",
+          "description": "Get sessions with optional filtering, sorting and pagination",
+          "parameters": [
+            {
+              "name": "search",
+              "required": false,
+              "in": "query",
+              "description": "Search in title, description, speaker name, track name, location name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sessionType",
+              "required": false,
+              "in": "query",
+              "description": "Filter by session type",
+              "schema": {
+                "enum": [
+                  "talk",
+                  "workshop",
+                  "panel",
+                  "keynote",
+                  "breakout"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "difficultyLevel",
+              "required": false,
+              "in": "query",
+              "description": "Filter by difficulty level",
+              "schema": {
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "status",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "draft",
+                  "published",
+                  "cancelled",
+                  "completed"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "locationId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by location ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "location",
+              "required": false,
+              "in": "query",
+              "description": "Filter by location location",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by track ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "speakerId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by speaker ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "speakerName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by speaker name (first name or last name)",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by track name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "description": "Sort field",
+              "schema": {
+                "enum": [
+                  "startTime",
+                  "endTime",
+                  "title",
+                  "difficultyLevel",
+                  "capacity",
+                  "createdAt",
+                  "locationName"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortOrder",
+              "required": false,
+              "in": "query",
+              "description": "Sort order",
+              "schema": {
+                "enum": [
+                  "ASC",
+                  "DESC"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "required": false,
+              "in": "query",
+              "description": "Page number",
+              "schema": {
+                "default": 1,
+                "example": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "in": "query",
+              "description": "Items per page",
+              "schema": {
+                "default": 10,
+                "example": 10,
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Sessions found successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "sessionType": {
+                              "type": "string",
+                              "enum": [
+                                "talk",
+                                "workshop",
+                                "panel",
+                                "keynote",
+                                "breakout"
+                              ]
+                            },
+                            "difficultyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "beginner",
+                                "intermediate",
+                                "advanced"
+                              ]
+                            },
+                            "startTime": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "endTime": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "capacity": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "meta": {
+                        "type": "object",
+                        "properties": {
+                          "total": {
+                            "type": "number"
+                          },
+                          "page": {
+                            "type": "number"
+                          },
+                          "limit": {
+                            "type": "number"
+                          },
+                          "totalPages": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/session/favorite": {
+        "get": {
+          "operationId": "SessionController_getFavoriteSessions",
+          "summary": "Get user's favorite sessions",
+          "parameters": [
+            {
+              "name": "search",
+              "required": false,
+              "in": "query",
+              "description": "Search in title, description, speaker name, track name, location name, session type, difficulty level",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sessionType",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "talk",
+                  "workshop",
+                  "panel",
+                  "keynote",
+                  "breakout"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "difficultyLevel",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "status",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "draft",
+                  "published",
+                  "cancelled",
+                  "completed"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "locationId",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "location",
+              "required": false,
+              "in": "query",
+              "description": "Filter by location name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackId",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "speakerId",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "speakerName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by speaker name (first name or last name)",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by track name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortOrder",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "ASC",
+                  "DESC"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": 10,
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of favorite sessions",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Session"
+                        }
+                      },
+                      "meta": {
+                        "type": "object",
+                        "properties": {
+                          "total": {
+                            "type": "number"
+                          },
+                          "filtered": {
+                            "type": "number"
+                          },
+                          "page": {
+                            "type": "number"
+                          },
+                          "limit": {
+                            "type": "number"
+                          },
+                          "totalPages": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            },
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/session/{id}": {
+        "get": {
+          "operationId": "SessionController_findOne",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/session/{id}/favorite": {
+        "post": {
+          "operationId": "SessionController_addToFavorites",
+          "summary": "Add session to favorites",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Session added to favorites successfully"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Session not found"
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            },
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "delete": {
+          "operationId": "SessionController_removeFromFavorites",
+          "summary": "Remove session from favorites",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Session removed from favorites successfully"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Session not found"
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            },
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/session/favorite/export": {
+        "get": {
+          "operationId": "SessionController_exportFavoriteSessions",
+          "summary": "Export favorite sessions to calendar",
+          "description": "Download all favorite sessions as an ICS file",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Calendar file generated successfully",
+              "content": {
+                "text/calendar": {
+                  "schema": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "tags": [
+            "Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/track": {
+        "get": {
+          "operationId": "TrackController_findAll",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/track/{id}": {
+        "get": {
+          "operationId": "TrackController_findOne",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/session": {
+        "post": {
+          "operationId": "AdminSessionController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSessionDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "get": {
+          "operationId": "AdminSessionController_findSessions",
+          "summary": "Find sessions with filters and sorting",
+          "description": "Get sessions with optional filtering, sorting and pagination",
+          "parameters": [
+            {
+              "name": "search",
+              "required": false,
+              "in": "query",
+              "description": "Search in title, description, speaker name, track name, location name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sessionType",
+              "required": false,
+              "in": "query",
+              "description": "Filter by session type",
+              "schema": {
+                "enum": [
+                  "talk",
+                  "workshop",
+                  "panel",
+                  "keynote",
+                  "breakout"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "difficultyLevel",
+              "required": false,
+              "in": "query",
+              "description": "Filter by difficulty level",
+              "schema": {
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "status",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "enum": [
+                  "draft",
+                  "published",
+                  "cancelled",
+                  "completed"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "locationId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by location ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "location",
+              "required": false,
+              "in": "query",
+              "description": "Filter by location location",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by track ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "speakerId",
+              "required": false,
+              "in": "query",
+              "description": "Filter by speaker ID",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "speakerName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by speaker name (first name or last name)",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "trackName",
+              "required": false,
+              "in": "query",
+              "description": "Filter by track name",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "startTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by start time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeFrom",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (from)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "endTimeTo",
+              "required": false,
+              "in": "query",
+              "description": "Filter by end time (to)",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "description": "Sort field",
+              "schema": {
+                "enum": [
+                  "startTime",
+                  "endTime",
+                  "title",
+                  "difficultyLevel",
+                  "capacity",
+                  "createdAt",
+                  "locationName"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "sortOrder",
+              "required": false,
+              "in": "query",
+              "description": "Sort order",
+              "schema": {
+                "enum": [
+                  "ASC",
+                  "DESC"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "required": false,
+              "in": "query",
+              "description": "Page number",
+              "schema": {
+                "default": 1,
+                "example": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "in": "query",
+              "description": "Items per page",
+              "schema": {
+                "default": 10,
+                "example": 10,
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Sessions found successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "sessionType": {
+                              "type": "string",
+                              "enum": [
+                                "talk",
+                                "workshop",
+                                "panel",
+                                "keynote",
+                                "breakout"
+                              ]
+                            },
+                            "difficultyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "beginner",
+                                "intermediate",
+                                "advanced"
+                              ]
+                            },
+                            "startTime": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "endTime": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "capacity": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "meta": {
+                        "type": "object",
+                        "properties": {
+                          "total": {
+                            "type": "number"
+                          },
+                          "page": {
+                            "type": "number"
+                          },
+                          "limit": {
+                            "type": "number"
+                          },
+                          "totalPages": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Admin - Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/session/{id}": {
+        "put": {
+          "operationId": "AdminSessionController_update",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSessionDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "delete": {
+          "operationId": "AdminSessionController_remove",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Session"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/track": {
+        "post": {
+          "operationId": "AdminTrackController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTrackDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/track/{id}": {
+        "put": {
+          "operationId": "AdminTrackController_update",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTrackDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "delete": {
+          "operationId": "AdminTrackController_remove",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/track/{trackId}/session/{sessionId}": {
+        "post": {
+          "operationId": "AdminTrackController_addSessionToTrack",
+          "parameters": [
+            {
+              "name": "trackId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sessionId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Track"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/connection": {
+        "post": {
+          "operationId": "ConnectionController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateConnectionDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Connection"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        },
+        "get": {
+          "operationId": "ConnectionController_findAll",
+          "summary": "Get all connections with optional status filter",
+          "parameters": [
+            {
+              "name": "status",
+              "required": false,
+              "in": "query",
+              "description": "Filter connections by status",
+              "schema": {
+                "enum": [
+                  "pending",
+                  "accepted",
+                  "rejected"
+                ],
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of connections",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "accepted",
+                            "rejected"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "requester": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "email": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "receiver": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "email": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "tags": [
+            "Connection"
+          ],
+          "security": [
+            {
+              "bearer": []
+            },
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/connection/pending": {
+        "get": {
+          "operationId": "ConnectionController_findPendingRequests",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Connection"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/connection/{id}": {
+        "put": {
+          "operationId": "ConnectionController_update",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateConnectionDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Connection"
+          ],
+          "security": [
+            {
+              "bearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/event": {
+        "get": {
+          "operationId": "EventController_getEventDetails",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Event"
+          ]
+        }
+      },
+      "/api/v1/sponsor": {
+        "get": {
+          "operationId": "SponsorsController_findAll",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Sponsor"
+          ]
+        }
+      },
+      "/api/v1/admin/sponsor": {
+        "post": {
+          "operationId": "AdminSponsorsController_create",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSponsorDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Sponsor"
+          ]
+        }
+      },
+      "/api/v1/admin/sponsor/{id}": {
+        "put": {
+          "operationId": "AdminSponsorsController_update",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSponsorDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Sponsor"
+          ]
+        },
+        "delete": {
+          "operationId": "AdminSponsorsController_remove",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          },
+          "tags": [
+            "Admin - Sponsor"
+          ]
+        }
+      }
+    },
+    "info": {
+      "title": "Conference Management API",
+      "description": "The Conference Management API description",
+      "version": "1.0",
+      "contact": {
+  
+      }
+    },
+    "tags": [],
+    "servers": [],
+    "components": {
+      "securitySchemes": {
+        "bearer": {
+          "scheme": "bearer",
+          "bearerFormat": "JWT",
+          "type": "http"
+        }
+      },
+      "schemas": {
+        "RequestOTPDto": {
+          "type": "object",
+          "properties": {
+            "recipient": {
+              "type": "string",
+              "description": "Email or phone number of the user"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "phone"
+              ],
+              "description": "Channel to send OTP"
+            },
+            "countryCode": {
+              "type": "string",
+              "description": "Country code (required when channel is phone)",
+              "example": "+91"
+            }
+          },
+          "required": [
+            "recipient",
+            "channel"
+          ]
+        },
+        "VerifyOTPDto": {
+          "type": "object",
+          "properties": {
+            "recipient": {
+              "type": "string",
+              "description": "Email or phone number of the user"
+            },
+            "code": {
+              "type": "string",
+              "description": "OTP code received"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "phone"
+              ],
+              "description": "Channel used for OTP"
+            },
+            "countryCode": {
+              "type": "string",
+              "description": "Country code (required when channel is phone)",
+              "example": "+91"
+            }
+          },
+          "required": [
+            "recipient",
+            "code",
+            "channel"
+          ]
+        },
+        "UpdateUserDto": {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string",
+              "description": "Country code starting with + (e.g. +91)",
+              "example": "+91"
+            },
+            "bio": {
+              "type": "string"
+            },
+            "profileImageId": {
+              "type": "number"
+            }
+          }
+        },
+        "CreatePermissionDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "create:users"
+            },
+            "description": {
+              "type": "string",
+              "example": "Permission to create users"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        },
+        "CreateRoleDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "admin"
+            },
+            "description": {
+              "type": "string",
+              "example": "Administrator role with full access"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        },
+        "Promise": {
+          "type": "object",
+          "properties": {
+  
+          }
+        },
+        "Media": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "fileName": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "assetId": {
+              "type": "string"
+            },
+            "creator": {
+              "$ref": "#/components/schemas/Promise"
+            },
+            "createdAt": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "updatedAt": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "url",
+            "assetId",
+            "creator",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        "CreateCompanyDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Acme Corp"
+            },
+            "description": {
+              "type": "string",
+              "example": "Leading technology solutions provider"
+            },
+            "website": {
+              "type": "string",
+              "example": "https://acme.com"
+            },
+            "logoId": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          "required": [
+            "name"
+          ]
+        },
+        "UpdateCompanyDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Acme Corp",
+              "description": "Company name"
+            },
+            "description": {
+              "type": "string",
+              "example": "Leading technology solutions provider",
+              "description": "Company description"
+            },
+            "website": {
+              "type": "string",
+              "example": "https://acme.com",
+              "description": "Company website URL"
+            },
+            "logoId": {
+              "type": "number",
+              "example": 1,
+              "description": "Company logo URL"
+            }
+          }
+        },
+        "CreateSessionDto": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "example": "Introduction to NestJS"
+            },
+            "description": {
+              "type": "string",
+              "example": "Learn the basics of NestJS framework"
+            },
+            "sessionType": {
+              "type": "string",
+              "enum": [
+                "talk",
+                "workshop",
+                "panel",
+                "keynote",
+                "breakout"
+              ],
+              "example": "workshop",
+              "description": "Type of session"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "cancelled",
+                "completed"
+              ],
+              "default": "draft"
+            },
+            "difficultyLevel": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            },
+            "startTime": {
+              "format": "date-time",
+              "type": "string",
+              "example": "2024-04-01T10:00:00Z"
+            },
+            "endTime": {
+              "format": "date-time",
+              "type": "string",
+              "example": "2024-04-01T11:00:00Z"
+            },
+            "locationId": {
+              "type": "number",
+              "example": 1
+            },
+            "capacity": {
+              "type": "number",
+              "example": 50
+            },
+            "speakerId": {
+              "type": "string"
+            },
+            "trackId": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "sessionType",
+            "status",
+            "difficultyLevel",
+            "startTime",
+            "endTime"
+          ]
+        },
+        "UpdateSessionDto": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "example": "Introduction to NestJS"
+            },
+            "description": {
+              "type": "string",
+              "example": "Learn the basics of NestJS framework"
+            },
+            "sessionType": {
+              "type": "string",
+              "enum": [
+                "talk",
+                "workshop",
+                "panel",
+                "keynote",
+                "breakout"
+              ],
+              "example": "workshop",
+              "description": "Type of session"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "cancelled",
+                "completed"
+              ],
+              "default": "draft"
+            },
+            "difficultyLevel": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            },
+            "startTime": {
+              "format": "date-time",
+              "type": "string",
+              "example": "2024-04-01T10:00:00Z"
+            },
+            "endTime": {
+              "format": "date-time",
+              "type": "string",
+              "example": "2024-04-01T11:00:00Z"
+            },
+            "locationId": {
+              "type": "number",
+              "example": 1
+            },
+            "capacity": {
+              "type": "number",
+              "example": 50
+            },
+            "speakerId": {
+              "type": "string"
+            },
+            "trackId": {
+              "type": "number"
+            }
+          }
+        },
+        "CreateTrackDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Backend Development"
+            },
+            "description": {
+              "type": "string",
+              "example": "Sessions focused on backend development technologies"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        },
+        "UpdateTrackDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Backend Development"
+            },
+            "description": {
+              "type": "string",
+              "example": "Sessions focused on backend development technologies"
+            }
+          }
+        },
+        "CreateConnectionDto": {
+          "type": "object",
+          "properties": {
+            "receiverId": {
+              "type": "string",
+              "example": "1",
+              "description": "ID of the user to connect with (for regular connections)"
+            },
+            "qrData": {
+              "type": "string",
+              "description": "Encrypted QR code data (for QR code connections)"
+            },
+            "message": {
+              "type": "string",
+              "example": "I would like to connect with you to discuss potential collaboration.",
+              "description": "Optional message to send with the connection request"
+            }
+          }
+        },
+        "UpdateConnectionDto": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "rejected"
+              ],
+              "example": "accepted",
+              "description": "New status for the connection request"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        },
+        "CreateSponsorDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Acme Corp"
+            },
+            "description": {
+              "type": "string",
+              "example": "Leading technology company"
+            },
+            "logoId": {
+              "type": "number",
+              "example": 1
+            },
+            "websiteUrl": {
+              "type": "string",
+              "example": "https://acme.com"
+            },
+            "sponsorType": {
+              "type": "string",
+              "enum": [
+                "platinum",
+                "gold",
+                "silver",
+                "bronze"
+              ],
+              "example": "gold"
+            }
+          },
+          "required": [
+            "name",
+            "sponsorType"
+          ]
+        },
+        "UpdateSponsorDto": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "Acme Corp"
+            },
+            "description": {
+              "type": "string",
+              "example": "Leading technology company"
+            },
+            "logoId": {
+              "type": "number",
+              "example": 1
+            },
+            "websiteUrl": {
+              "type": "string",
+              "example": "https://acme.com"
+            },
+            "sponsorType": {
+              "type": "string",
+              "enum": [
+                "platinum",
+                "gold",
+                "silver",
+                "bronze"
+              ],
+              "example": "gold"
+            }
+          }
+        }
+      }
+    }
+  }
