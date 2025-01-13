@@ -12,6 +12,7 @@ import { Sponsor, SponsorType } from "@/services/events/types"
 import Image from "next/image"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface SponsorFormDialogProps {
   sponsor?: Sponsor  // Optional for create mode
@@ -70,6 +71,8 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
       console.error(`Failed to ${mode} sponsor:`, error)
     }
   }
+
+  const isSubmitting = createSponsor.isPending || updateSponsor.isPending || uploadMedia.isPending
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -154,8 +157,19 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
               className="mt-1.5" 
             />
           </div>
-          <Button type="submit" className="w-full">
-            {mode === 'edit' ? 'Update' : 'Add'} Sponsor
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                {mode === 'edit' ? 'Updating...' : 'Adding...'}
+              </>
+            ) : (
+              mode === 'edit' ? 'Update' : 'Add'
+            )} Sponsor
           </Button>
         </form>
       </DialogContent>

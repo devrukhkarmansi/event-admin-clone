@@ -41,8 +41,8 @@ export const eventsService = {
   },
 
   deleteSponsor: async (id: string | number) => {
-    const response = await api.delete(`/admin/sponsor/${id}`)
-    return response.json()
+    await api.delete(`/admin/sponsor/${id}`)
+    return
   },
 
   uploadSponsorLogo: async (id: string | number, logo: File) => {

@@ -36,7 +36,10 @@ export function useDeleteSponsor() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (id: string | number) => eventsService.deleteSponsor(id),
+    mutationFn: async (id: string | number) => {
+      await eventsService.deleteSponsor(id)
+      return id  // Return the id for optimistic updates if needed
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sponsors'] })
     },

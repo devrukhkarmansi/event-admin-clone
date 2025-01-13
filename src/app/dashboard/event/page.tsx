@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Trash2, ImageIcon } from 'lucide-react'
 import { SponsorType, Sponsor } from '@/services/events/types'
 import { SponsorFormDialog } from "@/components/sponsors/sponsor-form-dialog"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useState } from 'react'
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 const sponsorTypeStyles = {
   [SponsorType.PLATINUM]: 'bg-violet-100 text-violet-800',
@@ -27,18 +30,23 @@ const formatSponsorType = (type: SponsorType) => {
 export default function EventPage() {
   const { data: event, isLoading: eventLoading } = useEvent()
   const { data: sponsors, isLoading: sponsorsLoading } = useSponsors()
+  const [deleteId, setDeleteId] = useState<string | number | null>(null)
   const deleteSponsor = useDeleteSponsor()
 
-  if (eventLoading || sponsorsLoading) return <div>Loading...</div>
+  if (eventLoading || sponsorsLoading) {
+    return <LoadingScreen />
+  }
+
   if (!event) return <div>Event not found</div>
 
-  const handleDelete = async (id: string | number) => {
-    if (confirm('Are you sure you want to delete this sponsor?')) {
-      try {
-        await deleteSponsor.mutateAsync(id)
-      } catch (error) {
-        console.error('Failed to delete sponsor:', error)
-      }
+  const handleDelete = async () => {
+    if (!deleteId) return
+    
+    try {
+      await deleteSponsor.mutateAsync(deleteId)
+      setDeleteId(null)
+    } catch (error) {
+      console.error('Failed to delete sponsor:', error)
     }
   }
 
@@ -160,7 +168,7 @@ export default function EventPage() {
                             variant="ghost" 
                             size="sm" 
                             className="text-red-500 hover:text-red-600"
-                            onClick={() => handleDelete(sponsor.id)}
+                            onClick={() => setDeleteId(sponsor.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -174,6 +182,15 @@ export default function EventPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete Sponsor"
+        description="Are you sure you want to delete this sponsor? This action cannot be undone."
+        onConfirm={handleDelete}
+        loading={deleteSponsor.isPending}
+      />
     </div>
   )
 } 
