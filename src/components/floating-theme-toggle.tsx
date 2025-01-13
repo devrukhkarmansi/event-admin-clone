@@ -10,7 +10,7 @@ export function FloatingThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="fixed right-4 top-4 z-50 rounded-full bg-background p-2 shadow-md hover:bg-accent flex items-center justify-center"
+      className="fixed right-4 top-4 z-50 rounded-full bg-muted p-2 shadow-md hover:bg-accent flex items-center justify-center"
     >
       <div className="relative h-5 w-5 flex items-center justify-center">
         <Sun className="absolute h-full w-full transition-all dark:scale-0" />

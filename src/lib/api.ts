@@ -6,6 +6,7 @@ interface RequestOptions extends RequestInit {
 }
 
 async function fetchWithAuth(url: string, options: RequestOptions = {}) {
+
   const accessToken = useAuthStore.getState().getAccessToken()
   
   const headers: Record<string, string> = {
@@ -57,12 +58,25 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}) {
 }
 
 export const api = {
-  get: (endpoint: string) => 
-    fetchWithAuth(`${config.apiUrl}${endpoint}`),
+  get: (endpoint: string) => {
+    return fetchWithAuth(`${config.apiUrl}${endpoint}`)
+  },
   
-  post: (endpoint: string, data: Record<string, unknown> | FormData) => 
-    fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+  post: (endpoint: string, data: Record<string, unknown> | FormData) => {
+    return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'POST',
       data,
+    })
+  },
+
+  patch: (endpoint: string, data: Record<string, unknown> | FormData) => 
+    fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+      method: 'PATCH',
+      data,
+    }),
+
+  delete: (endpoint: string) => 
+    fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+      method: 'DELETE',
     }),
 } 
