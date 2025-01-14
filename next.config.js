@@ -2,6 +2,13 @@
 const nextConfig = {
   images: {
     domains: ['res.cloudinary.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'event-api-vzfj.onrender.com',
+        pathname: '/**',
+      },
+    ],
   },
 }
 

@@ -17,6 +17,19 @@ export function useVerifyOtp() {
 
 export function useRequestOtp() {
   return useMutation({
-    mutationFn: (data: RequestOtpParams) => authService.requestOtp(data),
+    mutationFn: async (data: RequestOtpParams) => {
+      try {
+        const response = await authService.requestOtp(data)
+        return response
+      } catch (error) {
+        // Ensure the error is propagated
+        throw error
+      }
+    },
+    // Add onError handler
+    onError: (error) => {
+      console.error('Request OTP Error:', error)
+      return false
+    }
   })
 } 

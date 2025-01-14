@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { Input } from "./input"
 
 interface OTPInputProps {
@@ -13,6 +13,10 @@ interface OTPInputProps {
 export function OTPInput({ length = 6, value, onChange, disabled }: OTPInputProps) {
   const [otp, setOtp] = useState(value.split(''))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    setOtp(value.split(''))
+  }, [value])
 
   const handleChange = (index: number, digit: string) => {
     if (digit.length > 1) return // Prevent multiple digits
