@@ -1,20 +1,17 @@
 import { api } from '@/lib/api'
-import { Session, CreateSessionParams } from './types'
+import { CreateSessionParams, Session } from './types'
 import { PaginatedResponse } from '../common/types'
 
 export const sessionsService = {
-  getSessions: async (eventId: string, page = 1, limit = 10): Promise<PaginatedResponse<Session>> => {
-    const response = await api.get(`/events/${eventId}/sessions?page=${page}&limit=${limit}`)
-    return response.json()
+  getSessions: (eventId: string, page = 1, limit = 10) => {
+    return api.get<PaginatedResponse<Session>>(`/events/${eventId}/sessions?page=${page}&limit=${limit}`)
   },
 
-  getSession: async (eventId: string, sessionId: string): Promise<Session> => {
-    const response = await api.get(`/events/${eventId}/sessions/${sessionId}`)
-    return response.json()
+  getSession: (eventId: string, sessionId: string) => {
+    return api.get<Session>(`/events/${eventId}/sessions/${sessionId}`)
   },
 
-  createSession: async (data: CreateSessionParams): Promise<Session> => {
-    const response = await api.post(`/events/${data.eventId}/sessions`, data)
-    return response.json()
+  createSession: (data: CreateSessionParams) => {
+    return api.post<Session>(`/events/${data.eventId}/sessions`, data)
   }
 } 
