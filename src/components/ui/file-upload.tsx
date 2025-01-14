@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "./button"
 import { LoadingSpinner } from "./loading-spinner"
 import { UploadCloud } from "lucide-react"
+import { X } from "lucide-react"
 
 interface FileUploadProps {
   onChange: (file: File | null) => void
@@ -92,13 +93,14 @@ export function FileUpload({
           />
           <Button
             type="button"
-            variant="outline"
-            size="sm"
-            className="absolute -right-2 -top-2"
+            variant="secondary"
+            size="icon"
+            className="absolute -right-2 -top-2 h-6 w-6 rounded-full shadow-lg hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onChange(null)}
             disabled={disabled || loading}
           >
-            ×
+            <X className="h-4 w-4" />
+            <span className="sr-only">Remove image</span>
           </Button>
         </div>
       ) : (

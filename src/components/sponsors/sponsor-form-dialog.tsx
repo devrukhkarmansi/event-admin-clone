@@ -13,7 +13,7 @@ import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { FileUpload } from "@/components/ui/file-upload"
-import { Label } from "@/components/ui/label"
+import { Label } from "@radix-ui/react-label"
 
 interface SponsorFormDialogProps {
   sponsor?: Sponsor  // Optional for create mode
@@ -51,7 +51,7 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
     const formData = new FormData(e.currentTarget)
     
     try {
-      let logoId = sponsor?.logoId || undefined
+      let logoId: number | undefined = sponsor?.logoId || undefined
 
       if (logo.file) {
         const mediaResponse = await uploadMedia.mutateAsync({
@@ -61,6 +61,10 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
         logoId = mediaResponse.id
       }
       
+      if (!logo.url && !logo.file) {
+        logoId = undefined
+      }
+
       const sponsorData = {
         name: formData.get('name') as string,
         type: formData.get('type') as SponsorType,
@@ -114,19 +118,18 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
               value={logo?.url}
             />
           </div>
-          <div>
-            <label className="text-sm font-medium">Name</label>
+          <div className="space-y-2">
+            <Label>Name</Label>
             <Input 
               name="name" 
               defaultValue={sponsor?.name}
               required 
-              className="mt-1.5" 
             />
           </div>
-          <div>
-            <label className="text-sm font-medium">Type</label>
+          <div className="space-y-2">
+            <Label>Type</Label>
             <Select name="type" defaultValue={sponsor?.sponsorType} required>
-              <SelectTrigger className="mt-1.5">
+              <SelectTrigger>
                 <SelectValue placeholder="Select sponsor type" />
               </SelectTrigger>
               <SelectContent>
@@ -137,12 +140,11 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <label className="text-sm font-medium">Description</label>
+          <div className="space-y-2">
+            <Label>Description</Label>
             <Textarea 
               name="description" 
               defaultValue={sponsor?.description}
-              className="mt-1.5" 
             />
           </div>
           <Button 
