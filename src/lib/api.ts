@@ -84,32 +84,40 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}) {
 }
 
 export const api = {
-  get: (endpoint: string) => {
-    return fetchWithAuth(`${config.apiUrl}${endpoint}`)
+  get: async <T>(endpoint: string): Promise<T> => {
+    const response = await fetchWithAuth(`${config.apiUrl}${endpoint}`)
+    return response.json()
   },
   
-  post: (endpoint: string, data: Record<string, unknown> | FormData) => {
-    return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+  post: async <T>(endpoint: string, data: Record<string, unknown> | FormData): Promise<T> => {
+    const response = await fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'POST',
       data,
     })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message)
+    }
+
+    return response.json()
   },
 
-  put: (endpoint: string, data: Record<string, unknown> | FormData) => {
+  put: <T>(endpoint: string, data: Record<string, unknown> | FormData) => {
     return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'PUT',
       data,
-    })
+    }).then(res => res.json() as Promise<T>)
   },
 
-  patch: (endpoint: string, data: Record<string, unknown> | FormData) => 
+  patch: <T>(endpoint: string, data: Record<string, unknown> | FormData) => 
     fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'PATCH',
       data,
-    }),
+    }).then(res => res.json() as Promise<T>),
 
-  delete: (endpoint: string) => 
+  delete: <T>(endpoint: string) => 
     fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'DELETE',
-    }),
+    }).then(res => res.json() as Promise<T>),
 } 

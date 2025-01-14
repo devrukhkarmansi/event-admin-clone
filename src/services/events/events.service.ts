@@ -1,64 +1,47 @@
 import { api } from '@/lib/api'
-import { CreateSponsorParams, Event, SponsorsResponse, UpdateSponsorParams } from './types'
+import { CreateSponsorParams, Event, Sponsor, SponsorsResponse, UpdateSponsorParams } from './types'
 import { PaginatedResponse } from '../common/types'
 
 export const eventsService = {
-  getEvents: async ( page = 1, limit = 10): Promise<PaginatedResponse<Event>> => {
+  getEvents: (page = 1, limit = 10) => {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit)
     })
-    
-    const response = await api.get(`/events?${params}`)
-    return response.json()
+    return api.get<PaginatedResponse<Event>>(`/events?${params}`)
   },
 
-  getEvent: async (): Promise<Event> => {
-    const response = await api.get('/event')
-    return response.json()
+  getEvent: () => {
+    return api.get<Event>('/event')
   },
 
-  createSponsor: async (data: CreateSponsorParams) => {
-    const { type, ...rest } = data;
-    const requestData = {
-      ...rest,
-      sponsorType: type,
-    }
-
-    const response = await api.post('/admin/sponsor', requestData as unknown as Record<string, unknown>)
-    return response.json()
+  createSponsor: (data: CreateSponsorParams) => {
+    const { type, ...rest } = data
+    const requestData = { ...rest, sponsorType: type }
+    return api.post<Sponsor>('/admin/sponsor', requestData)
   },
 
-  updateSponsor: async (data: UpdateSponsorParams) => {
-    const { type, id, ...rest } = data;
-    const requestData = {
-      ...rest,
-      sponsorType: type,
-    }
-
-    const response = await api.put(`/admin/sponsor/${id}`, requestData as unknown as Record<string, unknown>)
-    return response.json()
+  updateSponsor: (data: UpdateSponsorParams) => {
+    const { type, id, ...rest } = data
+    const requestData = { ...rest, sponsorType: type }
+    return api.put<Sponsor>(`/admin/sponsor/${id}`, requestData)
   },
 
-  deleteSponsor: async (id: string | number) => {
-    await api.delete(`/admin/sponsor/${id}`)
-    return
+  deleteSponsor: (id: string | number) => {
+    return api.delete(`/admin/sponsor/${id}`)
   },
 
-  uploadSponsorLogo: async (id: string | number, logo: File) => {
+  uploadSponsorLogo: (id: string | number, logo: File) => {
     const formData = new FormData()
     formData.append('logo', logo)
-    const response = await api.patch(`/sponsors/${id}/logo`, formData)
-    return response.json()
+    return api.patch<Sponsor>(`/sponsors/${id}/logo`, formData)
   },
 
-  getSponsor: async (id: string | number) => {
-    const response = await api.get(`/sponsor/${id}`)
-    return response.json()
+  getSponsor: (id: string | number) => {
+    return api.get<Sponsor>(`/sponsor/${id}`)
   },
 
-  getSponsors: async (): Promise<SponsorsResponse> => {
-    const response = await api.get('/sponsor')
-    return response.json()
+  getSponsors: () => {
+    return api.get<SponsorsResponse>('/sponsor')
   }
 } 
