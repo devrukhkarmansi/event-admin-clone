@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { OTPInput } from "@/components/ui/otp-input"
 import { useRequestOtp, useVerifyOtp } from "@/hooks/use-auth"
 import { useAuthStore } from "@/store/auth-store"
+import { useToast } from "@/components/ui/toast"
 
 type Channel = 'email' | 'phone'
 
@@ -28,12 +29,23 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard')
+      if (user?.role === 'admin' || user?.role === 'organizer') {
+        router.push('/dashboard')
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Unauthorized access",
+          description: "Admin/Organizer only."
+        })
+        useAuthStore.getState().clearAuth()
+      }
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, user, router, toast])
 
   const loading = requestOtpMutation.isPending || verifyOtpMutation.isPending
 

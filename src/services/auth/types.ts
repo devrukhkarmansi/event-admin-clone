@@ -22,6 +22,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  role: 'admin' | 'organizer';
   profileImage?: {
     url: string;
   };
