@@ -1,18 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ImageIcon, Pencil, Plus } from "lucide-react"
+import { Pencil, Plus } from "lucide-react"
 import { useCreateSponsor, useUpdateSponsor } from "@/hooks/use-events"
 import { Sponsor, SponsorType } from "@/services/events/types"
-import Image from "next/image"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { FileUpload } from "@/components/ui/file-upload"
+import { Label } from "@/components/ui/label"
 
 interface SponsorFormDialogProps {
   sponsor?: Sponsor  // Optional for create mode
@@ -21,15 +22,27 @@ interface SponsorFormDialogProps {
 
 export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
   const [open, setOpen] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string>()
+  const [logo, setLogo] = useState<{ file?: File; url?: string }>({
+    url: sponsor?.logo?.url
+  })
   const createSponsor = useCreateSponsor()
   const updateSponsor = useUpdateSponsor()
   const uploadMedia = useUploadMedia()
-  
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+
+  useEffect(() => {
+    if (!open) {
+      setLogo({ url: sponsor?.logo?.url })
+    }
+  }, [open, sponsor?.logo?.url])
+
+  const loading = createSponsor.isPending || updateSponsor.isPending
+  const uploadingLogo = uploadMedia.isPending
+
+  const handleLogoChange = (file: File | null) => {
     if (file) {
-      setPreviewUrl(URL.createObjectURL(file))
+      setLogo({ file, url: URL.createObjectURL(file) })
+    } else {
+      setLogo({})
     }
   }
 
@@ -39,11 +52,10 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
     
     try {
       let logoId = sponsor?.logoId || undefined
-      const logoFile = formData.get('logo') as File
 
-      if (logoFile?.size) {
+      if (logo.file) {
         const mediaResponse = await uploadMedia.mutateAsync({
-          file: logoFile,
+          file: logo.file,
           mediaType: MediaType.SPONSOR_LOGO
         })
         logoId = mediaResponse.id
@@ -66,7 +78,6 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
       }
 
       setOpen(false)
-      setPreviewUrl(undefined)
     } catch (error) {
       console.error(`Failed to ${mode} sponsor:`, error)
     }
@@ -93,38 +104,15 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
           <DialogTitle>{mode === 'edit' ? 'Edit' : 'Add'} Sponsor</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Logo</label>
-            <div className="mt-2 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg border bg-muted flex items-center justify-center">
-                {previewUrl ? (
-                  <Image 
-                    src={previewUrl}
-                    alt="Logo preview"
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                ) : sponsor?.logo?.url ? (
-                  <Image 
-                    src={sponsor.logo.url}
-                    alt={sponsor.name}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                ) : (
-                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                )}
-              </div>
-              <Input
-                type="file"
-                name="logo"
-                accept="image/*"
-                onChange={handleLogoChange}
-                className="flex-1"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Logo</Label>
+            <FileUpload
+              accept="image/*"
+              onChange={handleLogoChange}
+              loading={uploadingLogo}
+              disabled={loading}
+              value={logo?.url}
+            />
           </div>
           <div>
             <label className="text-sm font-medium">Name</label>
