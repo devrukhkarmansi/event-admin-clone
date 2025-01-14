@@ -41,6 +41,7 @@ export default function EventPage() {
   const deleteSponsor = useDeleteSponsor()
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const [formData, setFormData] = useState({
     name: event?.name || "",
@@ -72,7 +73,6 @@ export default function EventPage() {
     }
   })
 
-  const [uploadingLogo, setUploadingLogo] = useState(false)
   const uploadLogo = useUploadMedia()
 
   const handleLogoChange = async (file: File | null) => {
