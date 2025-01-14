@@ -6,6 +6,11 @@ export interface User {
   bio: string | null
   isActive: boolean
   phoneNumber: string | null
+  role: {
+    id: number
+    name: string
+    description: string | null
+  }
   profileImage: { url: string } | null
   company: {
     name: string

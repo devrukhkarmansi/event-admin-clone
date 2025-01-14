@@ -97,9 +97,10 @@ export default function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px]">Name</TableHead>
-                    <TableHead className="w-[300px]">Email</TableHead>
-                    <TableHead className="w-[200px]">Phone</TableHead>
+                    <TableHead className="w-[250px]">Name</TableHead>
+                    <TableHead className="w-[250px]">Email</TableHead>
+                    <TableHead className="w-[150px]">Phone</TableHead>
+                    <TableHead className="w-[100px]">Role</TableHead>
                     <TableHead>Company</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -116,6 +117,7 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="truncate">{user.email}</TableCell>
                       <TableCell>{user.phoneNumber || '-'}</TableCell>
+                      <TableCell className="capitalize">{user.role?.name || '-'}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {user.company?.logo && (
