@@ -8,10 +8,13 @@ import { Avatar } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/auth-store"
 import { useUser } from "@/hooks/use-auth"
 import React from "react"
+import Image from "next/image"
+import { useEvent } from '@/hooks/use-events'
 
 export function AppSidebar() {
   const router = useRouter()
   const { user, setUser, isAuthenticated, clearAuth } = useAuthStore()
+  const { data: event } = useEvent()
   const { data } = useUser()
 
   React.useEffect(() => {
@@ -30,20 +33,35 @@ export function AppSidebar() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen sticky top-0 border-r bg-background w-[240px]">
       <SidebarHeader className="border-b px-6 py-4">
-        <div className="flex items-center justify-between w-full">
-          <h2 className="font-semibold">Events Admin</h2>
-          <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center">
+            {event?.logo ? (
+              <Image
+                src={event.logo.url}
+                alt="Event Logo"
+                width={32}
+                height={32}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Calendar className="h-5 w-5 text-primary-foreground" />
+            )}
+          </div>
+          <span className="text-lg font-semibold">Events Admin</span>
+          <div className="ml-auto flex items-center pr-2">
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarHeader>
 
-      <SidebarNav className="flex-1 px-3 py-4">
+      <SidebarNav className="flex-1 px-3 py-4 overflow-y-auto">
         <SidebarNavItem href="/dashboard" icon={<Home size={20} />}>
           Dashboard
         </SidebarNavItem>
         <SidebarNavItem href="/dashboard/event" icon={<Calendar size={20} />}>
-          Events
+          Event & Sponsors
         </SidebarNavItem>
         <SidebarNavItem href="/dashboard/sessions" icon={<LayoutGrid size={20} />}>
           Sessions
@@ -61,13 +79,13 @@ export function AppSidebar() {
           <div className="mb-4 px-2 flex items-center gap-3">
             <Avatar 
               src={user.profileImage?.url} 
-              className="h-12 w-12"
+              className="h-12 w-12 flex-shrink-0"
             />
-            <div>
-              <div className="font-medium">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium truncate">
                 {user.firstName} {user.lastName}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground truncate">
                 {user.email}
               </div>
             </div>
