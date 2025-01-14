@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -27,36 +27,107 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("")
   const [error, setError] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
 
   const loading = requestOtpMutation.isPending || verifyOtpMutation.isPending
 
   const requestOtp = async () => {
     try {
-      await requestOtpMutation.mutateAsync({ 
+      setError("")
+      setIsOtpSent(false)
+      setOtp("")
+
+      if (!recipient) {
+        setError(`Please enter your ${channel === 'email' ? 'email' : 'phone number'}`)
+        return
+      }
+
+      if (channel === 'phone' && !countryCode) {
+        setError("Please enter country code")
+        return
+      }
+
+      const result = await requestOtpMutation.mutateAsync({ 
         recipient,
         channel,
         ...(channel === 'phone' && { countryCode })
       })
+
+      if (!result) {
+        setError("Failed to send OTP")
+        return
+      }
+
       setIsOtpSent(true)
+      
     } catch (error) {
-      setError((error as ApiError).message || "Something went wrong")
+      const apiError = error as ApiError
+      console.error('Request OTP Error:', apiError)
+      setError(apiError.message || "Something went wrong")
+      setIsOtpSent(false)
+      setOtp("")
     }
+  }
+
+  const handleOtpChange = (value: string) => {
+    setError("")
+    setOtp(value)
   }
 
   const verifyOtp = async () => {
     try {
+      setError("")
+
+      if (otp.length < 6) {
+        setError("Please enter a valid OTP")
+        setOtp("")
+        return
+      }
+
       const data = await verifyOtpMutation.mutateAsync({
         recipient,
         code: otp,
         channel,
         ...(channel === 'phone' && { countryCode })
       })
-      
-      setTokens(data)
-      setUser(data.user)
-      router.push("/dashboard")
+
+      if (!data || !data.access_token || !data.user) {
+        setError("Invalid response from server")
+        setOtp("")
+        return
+      }
+
+      try {
+        setTokens(data)
+        setUser(data.user)
+        router.push("/dashboard")
+      } catch (error) {
+        console.error('Failed to set auth state:', error)
+        setError("Failed to complete login")
+        setOtp("")
+      }
+
     } catch (error) {
-      setError((error as ApiError).message || "Something went wrong")
+      const apiError = error as ApiError
+      console.error('Verify OTP Error:', apiError)
+      setError(apiError.message || "Something went wrong")
+      setOtp("")
+
+      if (apiError.message?.includes('attempts remaining')) {
+        console.log('Invalid OTP with attempts remaining')
+        // Keep showing OTP input
+        return
+      } else {
+        console.log('Invalid OTP with no attempts remaining')
+        // If no attempts remaining or other error, go back to request OTP
+        setIsOtpSent(false)
+      }
     }
   }
 
@@ -68,11 +139,6 @@ export default function LoginPage() {
   const handleCountryCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError("")
     setCountryCode(e.target.value)
-  }
-
-  const handleOtpChange = (value: string) => {
-    setError("")
-    setOtp(value)
   }
 
   return (
@@ -126,7 +192,7 @@ export default function LoginPage() {
               disabled={isOtpSent || loading}
             />
             
-            {!isOtpSent ? (
+            {(!isOtpSent) ? (
               <Button 
                 onClick={requestOtp} 
                 disabled={!recipient || (channel === 'phone' && !countryCode) || loading}
