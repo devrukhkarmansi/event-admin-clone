@@ -2,6 +2,21 @@ import { api } from '@/lib/api'
 import { CreateSponsorParams, Event, Sponsor, SponsorsResponse, UpdateSponsorParams } from './types'
 import { PaginatedResponse } from '../common/types'
 
+export interface UpdateEventParams {
+  id: number
+  name: string
+  description: string
+  logo?: { id: number }
+  address: {
+    line1: string
+    line2?: string
+    city: string
+    state: string
+    country: string
+    postalCode: string
+  }
+}
+
 export const eventsService = {
   getEvents: (page = 1, limit = 10) => {
     const params = new URLSearchParams({
@@ -13,6 +28,16 @@ export const eventsService = {
 
   getEvent: () => {
     return api.get<Event>('/event')
+  },
+
+  updateEvent: (data: UpdateEventParams) => {
+    const transformedData = {
+      name: data.name,
+      description: data.description,
+      logoId: data.logo?.id,
+      address: data.address
+    }
+    return api.put<Event>(`/admin/event/${data.id}`, transformedData as unknown as Record<string, unknown>)
   },
 
   createSponsor: (data: CreateSponsorParams) => {

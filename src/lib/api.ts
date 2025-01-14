@@ -89,18 +89,11 @@ export const api = {
     return response.json()
   },
   
-  post: async <T>(endpoint: string, data: Record<string, unknown> | FormData): Promise<T> => {
-    const response = await fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+  post: <T>(endpoint: string, data: Record<string, unknown> | FormData): Promise<T> => {
+    return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'POST',
       data,
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message)
-    }
-
-    return response.json()
+    }).then(res => res.json())
   },
 
   put: <T>(endpoint: string, data: Record<string, unknown> | FormData) => {

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import { MediaType } from './types'
+import { MediaType, MediaUploadResponse } from './types'
 
 export const mediaService = {
   uploadMedia: async (file: File, mediaType: MediaType) => {
@@ -7,7 +7,6 @@ export const mediaService = {
     formData.append('file', file)
     formData.append('mediaType', mediaType)
     
-    const response = await api.post('/media/upload', formData)
-    return response.json()
+    return api.post<MediaUploadResponse>('/media/upload', formData)
   }
 } 

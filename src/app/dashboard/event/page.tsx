@@ -6,12 +6,18 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Trash2, ImageIcon } from 'lucide-react'
+import { Trash2, ImageIcon, Pencil, Save, X } from 'lucide-react'
 import { SponsorType, Sponsor } from '@/services/events/types'
 import { SponsorFormDialog } from "@/components/sponsors/sponsor-form-dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useState } from 'react'
 import { LoadingScreen } from "@/components/ui/loading-screen"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { eventsService, UpdateEventParams } from "@/services/events/events.service"
+import { useToast } from '@/components/ui/toast'
+import { useUploadMedia } from "@/hooks/use-media"
+import { MediaType } from "@/services/media/types"
+import { FileUpload } from "@/components/ui/file-upload"
 
 const sponsorTypeStyles = {
   [SponsorType.PLATINUM]: 'bg-violet-100 text-violet-800',
@@ -28,10 +34,74 @@ const formatSponsorType = (type: SponsorType) => {
 }
 
 export default function EventPage() {
+  const [isEditing, setIsEditing] = useState(false)
   const { data: event, isLoading: eventLoading } = useEvent()
   const { data: sponsors, isLoading: sponsorsLoading } = useSponsors()
   const [deleteId, setDeleteId] = useState<string | number | null>(null)
   const deleteSponsor = useDeleteSponsor()
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
+
+  const [formData, setFormData] = useState({
+    name: event?.name || "",
+    description: event?.description || "",
+    logo: event?.logo,
+    address: {
+      line1: event?.address?.line1 || "",
+      line2: event?.address?.line2 || "",
+      city: event?.address?.city || "",
+      state: event?.address?.state || "",
+      country: event?.address?.country || "",
+      postalCode: event?.address?.postalCode || ""
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdateEventParams) => eventsService.updateEvent(data),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Event updated successfully" })
+      queryClient.invalidateQueries({ queryKey: ['event'] })
+      setIsEditing(false)
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update event",
+        variant: "destructive"
+      })
+    }
+  })
+
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const uploadLogo = useUploadMedia()
+
+  const handleLogoChange = async (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, logo: undefined }))
+      return
+    }
+
+    try {
+      setUploadingLogo(true)
+      const { id, url } = await uploadLogo.mutateAsync({
+        file,
+        mediaType: MediaType.EVENT_LOGO
+      })
+      setFormData(prev => ({
+        ...prev,
+        logo: { id, url }
+      }))
+    } catch (error) {
+      console.error('Failed to upload logo:', error)
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive"
+      })
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
 
   if (eventLoading || sponsorsLoading) {
     return <LoadingScreen />
@@ -59,55 +129,146 @@ export default function EventPage() {
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Event Information</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Event Information</CardTitle>
+              {!isEditing ? (
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Event
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditing(false)}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={() => updateMutation.mutate({ 
+                      ...formData,
+                      id: event.id,
+                    })}
+                    disabled={updateMutation.isPending}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
+              {isEditing && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Logo</label>
+                  <FileUpload
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    loading={uploadingLogo}
+                    disabled={updateMutation.isPending}
+                    value={formData.logo?.url}
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium">Title</label>
                 <Input
-                  value={event.name}
-                  disabled
+                  value={isEditing ? formData.name : event.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={!isEditing}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium">Description</label>
                 <Textarea
-                  value={event.description}
-                  disabled
+                  value={isEditing ? formData.description : event.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={!isEditing}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium">Address</label>
-                <div className="grid gap-4">
-                  <Input
-                    placeholder="Street"
-                    value={event.address.street}
-                    disabled
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 mt-2">
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground">Street Address</label>
                     <Input
-                      placeholder="City"
-                      value={event.address.city}
-                      disabled
+                      placeholder="Address Line 1"
+                      value={isEditing ? formData.address.line1 : event.address.line1}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        address: { ...formData.address, line1: e.target.value }
+                      })}
+                      disabled={!isEditing}
                     />
                     <Input
-                      placeholder="State"
-                      value={event.address.state}
-                      disabled
+                      placeholder="Address Line 2 (Optional)"
+                      value={isEditing ? formData.address.line2 : event.address.line2}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        address: { ...formData.address, line2: e.target.value }
+                      })}
+                      disabled={!isEditing}
                     />
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      placeholder="Country"
-                      value={event.address.country}
-                      disabled
-                    />
-                    <Input
-                      placeholder="Postal Code"
-                      value={event.address.postalCode}
-                      disabled
-                    />
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">City</label>
+                      <Input
+                        placeholder="City"
+                        value={isEditing ? formData.address.city : event.address.city}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          address: { ...formData.address, city: e.target.value }
+                        })}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">State</label>
+                      <Input
+                        placeholder="State"
+                        value={isEditing ? formData.address.state : event.address.state}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          address: { ...formData.address, state: e.target.value }
+                        })}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">Country</label>
+                      <Input
+                        placeholder="Country"
+                        value={isEditing ? formData.address.country : event.address.country}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          address: { ...formData.address, country: e.target.value }
+                        })}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">Postal Code</label>
+                      <Input
+                        placeholder="Postal Code"
+                        value={isEditing ? formData.address.postalCode : event.address.postalCode}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          address: { ...formData.address, postalCode: e.target.value }
+                        })}
+                        disabled={!isEditing}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

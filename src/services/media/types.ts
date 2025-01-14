@@ -1,3 +1,8 @@
+export interface MediaUploadResponse {
+  id: number
+  url: string
+}
+
 export enum MediaType {
   USER_PROFILE_IMAGE = 'USER_PROFILE_IMAGE',
   EVENT_LOGO = 'EVENT_LOGO',
