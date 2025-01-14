@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { Home, Calendar, Users, LayoutGrid, Settings, LogOut } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
-import { Avatar } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/auth-store"
 import { useUser } from "@/hooks/use-auth"
 import React from "react"
@@ -77,10 +77,13 @@ export function AppSidebar() {
       <div className="border-t p-4">
         {user && (
           <div className="mb-4 px-2 flex items-center gap-3">
-            <Avatar 
-              src={user.profileImage?.url} 
-              className="h-12 w-12 flex-shrink-0"
-            />
+            <Avatar className="h-12 w-12 flex-shrink-0">
+              <AvatarImage src={user.profileImage?.url} alt="User avatar" />
+              <AvatarFallback>
+                {user.firstName?.[0]}
+                {user.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0 flex-1">
               <div className="font-medium truncate">
                 {user.firstName} {user.lastName}
