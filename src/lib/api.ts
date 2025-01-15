@@ -112,5 +112,10 @@ export const api = {
   delete: <T>(endpoint: string) => 
     fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'DELETE',
-    }).then(res => res.json() as Promise<T>),
+    }).then(res => {
+      if (res.status === 204 || res.headers.get('content-length') === '0') {
+        return undefined as T
+      }
+      return res.json()
+    }),
 } 

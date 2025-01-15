@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Home, Calendar, Users, LayoutGrid, Settings, LogOut } from "lucide-react"
+import { Home, Calendar, Users, LayoutGrid, Settings, LogOut, GitBranch } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -10,6 +10,39 @@ import { useUser } from "@/hooks/use-auth"
 import React from "react"
 import Image from "next/image"
 import { useEvent } from '@/hooks/use-events'
+
+const NAVIGATION_ITEMS = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: Home
+  },
+  {
+    title: "Event & Sponsors",
+    href: "/dashboard/event",
+    icon: Calendar
+  },
+  {
+    title: "Tracks",
+    href: "/dashboard/tracks",
+    icon: GitBranch
+  },
+  {
+    title: "Sessions",
+    href: "/dashboard/sessions",
+    icon: LayoutGrid
+  },
+  {
+    title: "Users",
+    href: "/dashboard/users",
+    icon: Users
+  },
+  {
+    title: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings
+  }
+]
 
 export function AppSidebar() {
   const router = useRouter()
@@ -57,21 +90,15 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarNav className="flex-1 px-3 py-4 overflow-y-auto">
-        <SidebarNavItem href="/dashboard" icon={<Home size={20} />}>
-          Dashboard
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/event" icon={<Calendar size={20} />}>
-          Event & Sponsors
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/sessions" icon={<LayoutGrid size={20} />}>
-          Sessions
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/users" icon={<Users size={20} />}>
-          Users
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/settings" icon={<Settings size={20} />}>
-          Settings
-        </SidebarNavItem>
+        {NAVIGATION_ITEMS.map((item) => (
+          <SidebarNavItem 
+            key={item.href} 
+            href={item.href} 
+            icon={<item.icon size={20} />}
+          >
+            {item.title}
+          </SidebarNavItem>
+        ))}
       </SidebarNav>
 
       <div className="border-t p-4">
