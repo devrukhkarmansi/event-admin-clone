@@ -20,6 +20,9 @@ import { useUsers } from "@/hooks/use-users"
 import { useLocations } from "@/hooks/use-locations"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { FileUpload } from "@/components/ui/file-upload"
+import { useUploadMedia } from "@/hooks/use-media"
+import { MediaType } from "@/services/media/types"
 
 export default function SessionsPage() {
   const sessionTypes = [
@@ -47,6 +50,9 @@ export default function SessionsPage() {
   const { data: tracks } = useTracks()
   const { data: users } = useUsers()
   const { data: locations } = useLocations()
+  const uploadMedia = useUploadMedia()
+  const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | undefined>(undefined)
 
   const emptySession = useMemo(() => ({
     title: "",
@@ -75,26 +81,73 @@ export default function SessionsPage() {
         capacity: currentSession.capacity,
         difficultyLevel: currentSession.difficultyLevel,
         speakerId: currentSession.speaker?.id || "",
-        trackId: currentSession.trackId,
+        trackId: currentSession.tracks?.[0]?.id,
         status: currentSession.status
       })
+      if (currentSession.banner?.url) {
+        setBannerPreview(currentSession.banner.url)
+      }
     } else if (isAdding) {
       setFormData(emptySession)
+      setBannerPreview(undefined)
     }
   }, [currentSession, isAdding, emptySession])
+
+  const handleBannerSelect = (file: File | null) => {
+    setSelectedBanner(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setBannerPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setBannerPreview(undefined)
+    }
+  }
 
   const handleSubmit = async () => {
     try {
       if (isAdding) {
-        await createSession.mutateAsync(formData)
+        const newSession = await createSession.mutateAsync(formData)
+        
+        if (selectedBanner) {
+          const media = await uploadMedia.mutateAsync({ 
+            file: selectedBanner, 
+            mediaType: MediaType.SESSION_BANNER 
+          })
+          await updateSession.mutateAsync({ 
+            id: newSession.id,
+            bannerId: media.id
+          })
+        }
+        
         toast({ title: "Success", description: "Session created successfully" })
         setIsAdding(false)
+        setViewId(null)
       } else {
-        await updateSession.mutateAsync({ id: currentSession!.id, ...formData })
+        await updateSession.mutateAsync({ 
+          id: currentSession!.id, 
+          ...formData
+        })
+        
+        if (selectedBanner) {
+          const media = await uploadMedia.mutateAsync({ 
+            file: selectedBanner, 
+            mediaType: MediaType.SESSION_BANNER 
+          })
+          await updateSession.mutateAsync({ 
+            id: currentSession!.id,
+            bannerId: media.id
+          })
+        }
+        
         setIsEditing(false)
         await refetch()
         toast({ title: "Success", description: "Session updated successfully" })
       }
+      setSelectedBanner(null)
+      setBannerPreview(undefined)
     } catch (error) {
       console.error(error)
       toast({ 
@@ -402,20 +455,27 @@ export default function SessionsPage() {
               </div>
             </div>
 
-            {!isAdding && currentSession?.bannerImage && (
-              <div>
-                <label className="text-sm font-medium">Banner Image</label>
-                <div className="mt-2">
-                  <Image 
-                    src={currentSession.bannerImage.url} 
-                    alt={currentSession.title}
-                    width={800}
-                    height={400}
-                    className="rounded-lg max-h-[200px] object-cover"
-                  />
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="text-sm font-medium">Banner Image</label>
+              {(isEditing || isAdding) ? (
+                <FileUpload
+                  accept="image/*"
+                  onChange={handleBannerSelect}
+                  value={bannerPreview}
+                  className="mt-2"
+                />
+              ) : currentSession?.banner ? (
+                <Image 
+                  src={currentSession.banner.url} 
+                  alt={currentSession.title}
+                  width={800}
+                  height={400}
+                  className="rounded-lg max-h-[200px] object-cover"
+                />
+              ) : (
+                <p className="text-muted-foreground">No banner image</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

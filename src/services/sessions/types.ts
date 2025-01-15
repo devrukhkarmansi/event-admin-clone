@@ -45,7 +45,7 @@ export interface Session {
     floor: string
     building: string
   }
-  bannerImage?: {
+  banner?: {
     url: string
   }
 }
@@ -69,6 +69,7 @@ export interface CreateSessionParams {
 
 export interface UpdateSessionParams extends Partial<CreateSessionParams> {
   id: number
+  bannerId?: number
 }
 
 export interface SessionFilters {
