@@ -40,7 +40,24 @@ export default function SessionsPage() {
   const [viewId, setViewId] = useState<number | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-  const { data: sessions, isLoading } = useSessions()
+  const [filters, setFilters] = useState({
+    search: "",
+    sessionType: undefined as SessionType | undefined,
+    difficultyLevel: undefined as DifficultyLevel | undefined,
+    trackId: undefined as number | undefined,
+    speakerId: undefined as string | undefined,
+    locationId: undefined as number | undefined,
+    status: undefined as string | undefined
+  })
+  const { data: sessions, isLoading } = useSessions({
+    search: filters.search,
+    sessionType: filters.sessionType,
+    difficultyLevel: filters.difficultyLevel,
+    trackId: filters.trackId,
+    speakerId: filters.speakerId,
+    locationId: filters.locationId,
+    status: filters.status
+  })
   const { data: currentSession, refetch } = useSession(viewId || 0)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const deleteSession = useDeleteSession()
@@ -68,6 +85,12 @@ export default function SessionsPage() {
   }), [])
 
   const [formData, setFormData] = useState<CreateSessionParams>(emptySession)
+
+  const statusOptions = [
+    { value: "draft", label: "Draft" },
+    { value: "published", label: "Published" },
+    { value: "cancelled", label: "Cancelled" }
+  ]
 
   useEffect(() => {
     if (currentSession && !isAdding) {
@@ -491,6 +514,153 @@ export default function SessionsPage() {
           Add Session
         </Button>
       </div>
+
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium">Search</label>
+              <Input
+                placeholder="Search sessions..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Session Type</label>
+              <Select
+                value={filters.sessionType}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  sessionType: value === "all" ? undefined : value as SessionType
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {sessionTypes.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Difficulty Level</label>
+              <Select
+                value={filters.difficultyLevel}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  difficultyLevel: value === "all" ? undefined : value as DifficultyLevel
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All levels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All levels</SelectItem>
+                  {difficultyLevels.map(level => (
+                    <SelectItem key={level.value} value={level.value}>
+                      {level.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Track</label>
+              <Select
+                value={filters.trackId?.toString()}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  trackId: value === "all" ? undefined : Number(value)
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All tracks" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All tracks</SelectItem>
+                  {tracks?.map(track => (
+                    <SelectItem key={track.id} value={track.id.toString()}>
+                      {track.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Speaker</label>
+              <Select
+                value={filters.speakerId}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  speakerId: value === "all" ? undefined : value
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All speakers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All speakers</SelectItem>
+                  {users?.items.map(user => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.firstName} {user.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Location</label>
+              <Select
+                value={filters.locationId?.toString()}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  locationId: value === "all" ? undefined : Number(value)
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All locations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All locations</SelectItem>
+                  {locations?.map(location => (
+                    <SelectItem key={location.id} value={location.id.toString()}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters(prev => ({ 
+                  ...prev, 
+                  status: value === "all" ? undefined : value
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {statusOptions.map(status => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <LoadingScreen />

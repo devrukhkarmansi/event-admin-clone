@@ -83,6 +83,7 @@ export interface SessionFilters {
   locationId?: number
   trackId?: number
   speakerId?: string
+  status?: string
   page?: number
   limit?: number
 }
