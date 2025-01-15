@@ -1,10 +1,5 @@
 import { api } from '@/lib/api'
-import { MediaType, MediaUploadResponse } from './types'
-
-interface MediaUploadResponse {
-  id: number
-  url: string
-}
+import { MediaType, MediaUploadResponse,  } from './types'
 
 export const mediaService = {
   uploadMedia: async (file: File, mediaType: MediaType) => {

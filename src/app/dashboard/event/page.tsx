@@ -10,7 +10,7 @@ import { Trash2, ImageIcon, Pencil, Save, X } from 'lucide-react'
 import { SponsorType, Sponsor } from '@/services/events/types'
 import { SponsorFormDialog } from "@/components/sponsors/sponsor-form-dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { eventsService, UpdateEventParams } from "@/services/events/events.service"
@@ -33,6 +33,20 @@ const formatSponsorType = (type: SponsorType) => {
   ).join(' ');
 }
 
+interface FormData {
+  name: string
+  description: string
+  logo?: { id: number; url: string }
+  address: {
+    line1: string
+    line2?: string
+    city: string
+    state: string
+    country: string
+    postalCode: string
+  }
+}
+
 export default function EventPage() {
   const [isEditing, setIsEditing] = useState(false)
   const { data: event, isLoading: eventLoading } = useEvent()
@@ -43,17 +57,17 @@ export default function EventPage() {
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
 
-  const [formData, setFormData] = useState({
-    name: event?.name || "",
-    description: event?.description || "",
-    logo: event?.logo,
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    description: "",
+    logo: undefined,
     address: {
-      line1: event?.address?.line1 || "",
-      line2: event?.address?.line2 || "",
-      city: event?.address?.city || "",
-      state: event?.address?.state || "",
-      country: event?.address?.country || "",
-      postalCode: event?.address?.postalCode || ""
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      country: "",
+      postalCode: ""
     }
   })
 
@@ -103,6 +117,41 @@ export default function EventPage() {
     }
   }
 
+  useEffect(() => {
+    if (event) {
+      setFormData({
+        name: event.name || "",
+        description: event.description || "",
+        logo: event.logo,
+        address: {
+          line1: event.address.line1 || "",
+          line2: event.address.line2 || "",
+          city: event.address.city || "",
+          state: event.address.state || "",
+          country: event.address.country || "",
+          postalCode: event.address.postalCode || ""
+        }
+      })
+    }
+  }, [event])
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    setFormData({
+      name: event!.name,
+      description: event!.description,
+      logo: event!.logo,
+      address: {
+        line1: event!.address.line1,
+        line2: event!.address.line2,
+        city: event!.address.city,
+        state: event!.address.state,
+        country: event!.address.country,
+        postalCode: event!.address.postalCode
+      }
+    })
+  }
+
   if (eventLoading || sponsorsLoading) {
     return <LoadingScreen />
   }
@@ -141,7 +190,7 @@ export default function EventPage() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setIsEditing(false)}
+                    onClick={handleCancel}
                   >
                     <X className="mr-2 h-4 w-4" />
                     Cancel
