@@ -20,16 +20,33 @@ export interface Session {
   locationId: number
   capacity: number
   difficultyLevel: DifficultyLevel
-  speakerId: string
+  status: string
   trackId?: number
-  track?: {
+  tracks?: {
     id: number
     name: string
-  }
+    description: string
+  }[]
   speaker?: {
     id: string
     firstName: string
     lastName: string
+    email: string
+    bio: string | null
+    isActive: boolean
+    phoneNumber: string | null
+    countryCode: string | null
+  }
+  location?: {
+    id: number
+    name: string
+    description: string
+    capacity: number
+    floor: string
+    building: string
+  }
+  bannerImage?: {
+    url: string
   }
 }
 
@@ -44,6 +61,10 @@ export interface CreateSessionParams {
   difficultyLevel: DifficultyLevel
   speakerId: string
   trackId?: number
+  bannerImage?: {
+    url: string
+  }
+  status?: string
 }
 
 export interface UpdateSessionParams extends Partial<CreateSessionParams> {
