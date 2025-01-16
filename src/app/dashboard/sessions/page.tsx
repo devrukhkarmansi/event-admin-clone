@@ -21,6 +21,7 @@ import { useLocations } from "@/hooks/use-locations"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { FileUpload } from "@/components/ui/file-upload"
+import { Pagination } from "@/components/ui/pagination"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 
@@ -53,7 +54,11 @@ export default function SessionsPage() {
     endTimeFrom: undefined as string | undefined,
     endTimeTo: undefined as string | undefined
   })
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(10)
   const { data: sessions, isLoading } = useSessions({
+    page,
+    limit: pageSize,
     search: filters.search,
     sessionType: filters.sessionType === "all" ? undefined : filters.sessionType as SessionType,
     difficultyLevel: filters.difficultyLevel === "all" ? undefined : filters.difficultyLevel as DifficultyLevel,
@@ -927,6 +932,17 @@ export default function SessionsPage() {
                 </tbody>
               </table>
             </div>
+            {sessions && (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={page}
+                  totalPages={sessions.meta.totalPages}
+                  onPageChange={setPage}
+                  totalItems={sessions.meta.totalItems}
+                  pageSize={pageSize}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
