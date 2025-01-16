@@ -89,18 +89,11 @@ export const api = {
     return response.json()
   },
   
-  post: async <T>(endpoint: string, data: Record<string, unknown> | FormData): Promise<T> => {
-    const response = await fetchWithAuth(`${config.apiUrl}${endpoint}`, {
+  post: <T>(endpoint: string, data: Record<string, unknown> | FormData): Promise<T> => {
+    return fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'POST',
       data,
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message)
-    }
-
-    return response.json()
+    }).then(res => res.json())
   },
 
   put: <T>(endpoint: string, data: Record<string, unknown> | FormData) => {
@@ -119,5 +112,10 @@ export const api = {
   delete: <T>(endpoint: string) => 
     fetchWithAuth(`${config.apiUrl}${endpoint}`, {
       method: 'DELETE',
-    }).then(res => res.json() as Promise<T>),
+    }).then(res => {
+      if (res.status === 204 || res.headers.get('content-length') === '0') {
+        return undefined as T
+      }
+      return res.json()
+    }),
 } 

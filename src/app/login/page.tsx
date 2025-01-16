@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { OTPInput } from "@/components/ui/otp-input"
 import { useRequestOtp, useVerifyOtp } from "@/hooks/use-auth"
 import { useAuthStore } from "@/store/auth-store"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
 
 type Channel = 'email' | 'phone'
 

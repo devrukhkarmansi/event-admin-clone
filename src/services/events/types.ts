@@ -17,7 +17,8 @@ export interface Sponsor {
 }
 
 export interface Address {
-  street: string;
+  line1: string;
+  line2?: string;
   city: string;
   state: string;
   country: string;
@@ -25,13 +26,11 @@ export interface Address {
 }
 
 export interface Event {
-  id: string;
+  id: number;
   name: string;
   description: string;
+  logo?: { id: number; url: string };
   address: Address;
-  logo?: {
-    url: string;
-  };
   sponsors?: Sponsor[];
   createdAt: string;
   updatedAt: string;

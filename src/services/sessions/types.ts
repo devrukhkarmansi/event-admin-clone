@@ -1,27 +1,100 @@
+export enum SessionType {
+  WORKSHOP = 'workshop',
+  TALK = 'talk',
+  PANEL = 'panel'
+}
+
+export enum DifficultyLevel {
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced'
+}
+
 export interface Session {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  speakers: Speaker[];
-  eventId: string;
+  id: number
+  title: string
+  description: string
+  sessionType: SessionType
+  startTime: string
+  endTime: string
+  locationId: number
+  capacity: number
+  difficultyLevel: DifficultyLevel
+  status: string
+  trackId?: number
+  tracks?: {
+    id: number
+    name: string
+    description: string
+  }[]
+  speaker?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    bio: string | null
+    isActive: boolean
+    phoneNumber: string | null
+    countryCode: string | null
+  }
+  location?: {
+    id: number
+    name: string
+    description: string
+    capacity: number
+    floor: string
+    building: string
+  }
+  banner?: {
+    url: string
+  }
 }
 
-export interface Speaker {
-  id: string;
-  name: string;
-  bio: string;
-  avatar?: {
-    url: string;
-  };
+export interface CreateSessionParams {
+  title: string
+  description: string
+  sessionType: SessionType
+  startTime: string
+  endTime: string
+  locationId: number
+  capacity: number
+  difficultyLevel: DifficultyLevel
+  speakerId: string
+  trackId?: number
+  bannerImage?: {
+    url: string
+  }
+  status?: string
 }
 
-export interface CreateSessionParams extends Record<string, unknown> {
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  eventId: string;
-  speakers: string[];
+export interface UpdateSessionParams extends Partial<CreateSessionParams> {
+  id: number
+  bannerId?: number
+}
+
+export interface SessionFilters {
+  search?: string
+  sessionType?: SessionType
+  difficultyLevel?: DifficultyLevel
+  startTimeFrom?: string
+  startTimeTo?: string
+  endTimeFrom?: string
+  endTimeTo?: string
+  locationId?: number
+  trackId?: number
+  speakerId?: string
+  status?: string
+  page?: number
+  limit?: number
+}
+
+export type SessionsResponse = {
+  items: Session[]
+  meta: {
+    totalItems: number
+    itemCount: number
+    itemsPerPage: number
+    totalPages: number
+    currentPage: number
+  }
 } 

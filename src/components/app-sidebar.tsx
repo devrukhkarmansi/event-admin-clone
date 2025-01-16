@@ -1,21 +1,64 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { Home, Calendar, Users, LayoutGrid, Settings, LogOut } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
+import { Home, Calendar, Users, LayoutGrid, Settings, LogOut, GitBranch, MapPin, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/store/auth-store"
 import { useUser } from "@/hooks/use-auth"
-import React from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { useEvent } from '@/hooks/use-events'
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+
+const NAVIGATION_ITEMS = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: Home
+  },
+  {
+    title: "Event & Sponsors",
+    href: "/dashboard/event",
+    icon: Calendar
+  },
+  {
+    title: "Tracks",
+    href: "/dashboard/tracks",
+    icon: GitBranch
+  },
+  {
+    title: "Sessions",
+    href: "/dashboard/sessions",
+    icon: LayoutGrid
+  },
+  {
+    title: "Users",
+    href: "/dashboard/users",
+    icon: Users
+  },
+  {
+    title: "Locations",
+    href: "/dashboard/locations",
+    icon: MapPin
+  },
+  {
+    title: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings
+  }
+]
 
 export function AppSidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, setUser, isAuthenticated, clearAuth } = useAuthStore()
   const { data: event } = useEvent()
   const { data } = useUser()
+  const [collapsed, setCollapsed] = useState(false)
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -33,58 +76,92 @@ export function AppSidebar() {
   }
 
   return (
-    <div className="flex flex-col h-screen sticky top-0 border-r bg-background w-[240px]">
+    <div className={cn(
+      "flex flex-col h-screen sticky top-0 border-r bg-background transition-all duration-300 relative",
+      collapsed ? "w-[80px]" : "w-[240px]"
+    )}>
       <SidebarHeader className="border-b px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center">
-            {event?.logo ? (
-              <Image
-                src={event.logo.url}
-                alt="Event Logo"
-                width={32}
-                height={32}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <Calendar className="h-5 w-5 text-primary-foreground" />
-            )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center">
+              {event?.logo ? (
+                <Image
+                  src={event.logo.url}
+                  alt="Event Logo"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Calendar className="h-5 w-5 text-primary-foreground" />
+              )}
+            </div>
+            <span className={cn(
+              "text-lg font-semibold transition-opacity duration-300",
+              collapsed ? "opacity-0 w-0" : "opacity-100"
+            )}>
+              Events Admin
+            </span>
           </div>
-          <span className="text-lg font-semibold">Events Admin</span>
-          <div className="ml-auto flex items-center pr-2">
+          <div>
             <ThemeToggle />
           </div>
         </div>
       </SidebarHeader>
 
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-6 h-6 w-6 p-0.5 rounded-full border bg-background shadow-md z-10"
+      >
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </Button>
+
       <SidebarNav className="flex-1 px-3 py-4 overflow-y-auto">
-        <SidebarNavItem href="/dashboard" icon={<Home size={20} />}>
-          Dashboard
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/event" icon={<Calendar size={20} />}>
-          Event & Sponsors
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/sessions" icon={<LayoutGrid size={20} />}>
-          Sessions
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/users" icon={<Users size={20} />}>
-          Users
-        </SidebarNavItem>
-        <SidebarNavItem href="/dashboard/settings" icon={<Settings size={20} />}>
-          Settings
-        </SidebarNavItem>
+        {NAVIGATION_ITEMS.map((item) => (
+          <SidebarNavItem 
+            key={item.href}
+            href={item.href}
+            className={cn(
+              pathname === item.href && "bg-accent text-accent-foreground"
+            )}
+            icon={
+              <div className="flex items-center gap-3">
+                <item.icon size={20} />
+                <span className={cn(
+                  "transition-all duration-300",
+                  collapsed ? "opacity-0 w-0 hidden" : "opacity-100"
+                )}>
+                  {item.title}
+                </span>
+              </div>
+            }
+          >
+          </SidebarNavItem>
+        ))}
       </SidebarNav>
 
-      <div className="border-t p-4">
+      <div className={cn(
+        "border-t transition-all duration-300",
+        collapsed ? "p-2" : "p-4"
+      )}>
         {user && (
-          <div className="mb-4 px-2 flex items-center gap-3">
-            <Avatar className="h-12 w-12 flex-shrink-0">
-              <AvatarImage src={user.profileImage?.url} alt="User avatar" />
+          <div className={cn(
+            "flex items-center",
+            collapsed ? "justify-center" : "gap-3"
+          )}>
+            <Avatar>
+              <AvatarImage src={user.profileImage?.url} />
               <AvatarFallback>
                 {user.firstName?.[0]}
                 {user.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
-            <div className="min-w-0 flex-1">
+            <div className={cn(
+              "min-w-0 flex-1 transition-all duration-300",
+              collapsed ? "hidden" : "block"
+            )}>
               <div className="font-medium truncate">
                 {user.firstName} {user.lastName}
               </div>
@@ -92,15 +169,25 @@ export function AppSidebar() {
                 {user.email}
               </div>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50"
-        >
-          <LogOut size={20} />
-          Logout
-        </button>
       </div>
     </div>
   )
