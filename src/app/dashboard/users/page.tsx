@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Upload } from "lucide-react"
+import { Upload } from "lucide-react"
 import { useUsers } from "@/hooks/use-users"
 import {
   Table,
@@ -18,11 +18,12 @@ import Image from "next/image"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { usersService } from "@/services/users/users.service"
 import { useToast } from "@/components/ui/toast"
+import { Pagination } from "@/components/ui/pagination"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)
   const limit = 10
-  const { data: users, isLoading, isPending } = useUsers(page, limit)
+  const { data: users, isLoading } = useUsers(page, limit)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -137,37 +138,17 @@ export default function UsersPage() {
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(old => Math.max(1, old - 1))}
-                  disabled={page === 1 || isLoading}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Previous
-                </Button>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm">Page</span>
-                  <span className="text-sm font-medium">{users?.meta.currentPage}</span>
-                  <span className="text-sm text-muted-foreground">
-                    of {users?.meta.totalPages}
-                  </span>
+              {users && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={users.meta.totalPages}
+                    onPageChange={setPage}
+                    totalItems={users.meta.totalItems}
+                    pageSize={limit}
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (!isPending && users?.meta.currentPage < users?.meta.totalPages) {
-                      setPage(old => old + 1)
-                    }
-                  }}
-                  disabled={isPending || !users?.meta || users.meta.currentPage >= users.meta.totalPages}
-                >
-                  Next
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+              )}
             </div>
           )}
         </CardContent>

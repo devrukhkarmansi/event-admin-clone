@@ -91,8 +91,10 @@ export interface SessionFilters {
 export type SessionsResponse = {
   items: Session[]
   meta: {
-    total: number
-    page: number
-    limit: number
+    totalItems: number
+    itemCount: number
+    itemsPerPage: number
+    totalPages: number
+    currentPage: number
   }
 } 
