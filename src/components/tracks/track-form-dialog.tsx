@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Pencil } from "lucide-react"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
 import { useCreateTrack, useUpdateTrack } from "@/hooks/use-tracks"
 import { Track } from "@/services/tracks/types"
 

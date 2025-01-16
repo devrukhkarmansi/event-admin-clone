@@ -17,7 +17,7 @@ import { useState, useRef } from "react"
 import Image from "next/image"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { usersService } from "@/services/users/users.service"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)

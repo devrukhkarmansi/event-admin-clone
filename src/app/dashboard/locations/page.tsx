@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useToast } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
 import { Location } from "@/services/locations/types"
 
 export default function LocationsPage() {

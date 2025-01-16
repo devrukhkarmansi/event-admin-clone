@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react'
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { eventsService, UpdateEventParams } from "@/services/events/events.service"
-import { useToast } from '@/components/ui/toast'
+import { useToast } from "@/hooks/use-toast"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { FileUpload } from "@/components/ui/file-upload"
