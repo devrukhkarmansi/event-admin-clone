@@ -5,7 +5,7 @@ import { useSessions, useDeleteSession, useSession, useUpdateSession, useCreateS
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
-import { Trash2, Eye, ArrowLeft, Pencil, CalendarIcon, Plus } from "lucide-react"
+import { Trash2, Eye, ArrowLeft, Pencil, CalendarIcon, Plus, Search } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { useState, useEffect, useMemo } from "react"
 import { useToast } from "@/components/ui/toast"
@@ -42,21 +42,29 @@ export default function SessionsPage() {
   const [isAdding, setIsAdding] = useState(false)
   const [filters, setFilters] = useState({
     search: "",
-    sessionType: undefined as SessionType | undefined,
-    difficultyLevel: undefined as DifficultyLevel | undefined,
-    trackId: undefined as number | undefined,
-    speakerId: undefined as string | undefined,
-    locationId: undefined as number | undefined,
-    status: undefined as string | undefined
+    sessionType: "all" as SessionType | "all",
+    difficultyLevel: "all" as DifficultyLevel | "all",
+    trackId: "all" as string | "all",
+    speakerId: "all" as string | "all",
+    locationId: "all" as string | "all",
+    status: "all" as string | "all",
+    startTimeFrom: undefined as string | undefined,
+    startTimeTo: undefined as string | undefined,
+    endTimeFrom: undefined as string | undefined,
+    endTimeTo: undefined as string | undefined
   })
   const { data: sessions, isLoading } = useSessions({
     search: filters.search,
-    sessionType: filters.sessionType,
-    difficultyLevel: filters.difficultyLevel,
-    trackId: filters.trackId,
-    speakerId: filters.speakerId,
-    locationId: filters.locationId,
-    status: filters.status
+    sessionType: filters.sessionType === "all" ? undefined : filters.sessionType as SessionType,
+    difficultyLevel: filters.difficultyLevel === "all" ? undefined : filters.difficultyLevel as DifficultyLevel,
+    trackId: filters.trackId === "all" ? undefined : Number(filters.trackId),
+    speakerId: filters.speakerId === "all" ? undefined : filters.speakerId,
+    locationId: filters.locationId === "all" ? undefined : Number(filters.locationId),
+    status: filters.status === "all" ? undefined : filters.status,
+    startTimeFrom: filters.startTimeFrom,
+    startTimeTo: filters.startTimeTo,
+    endTimeFrom: filters.endTimeFrom,
+    endTimeTo: filters.endTimeTo
   })
   const { data: currentSession, refetch } = useSession(viewId || 0)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -81,7 +89,8 @@ export default function SessionsPage() {
     capacity: 50,
     difficultyLevel: DifficultyLevel.BEGINNER,
     speakerId: "",
-    trackId: undefined
+    trackId: undefined,
+    status: "draft"
   }), [])
 
   const [formData, setFormData] = useState<CreateSessionParams>(emptySession)
@@ -131,6 +140,17 @@ export default function SessionsPage() {
 
   const handleSubmit = async () => {
     try {
+      if (formData.status === "published") {
+        if (!formData.speakerId || !formData.locationId || !formData.trackId) {
+          toast({ 
+            title: "Validation Error", 
+            description: "Speaker, Location, and Track are required for published sessions",
+            variant: "destructive"
+          })
+          return
+        }
+      }
+
       if (isAdding) {
         const newSession = await createSession.mutateAsync(formData)
         
@@ -461,7 +481,10 @@ export default function SessionsPage() {
                 <label className="text-sm font-medium">Location</label>
                 <Select
                   value={formData.locationId?.toString()}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, locationId: Number(value) }))}
+                  onValueChange={(value) => setFormData(prev => ({ 
+                    ...prev, 
+                    locationId: Number(value)
+                  }))}
                   disabled={!isEditing && !isAdding}
                 >
                   <SelectTrigger>
@@ -499,6 +522,26 @@ export default function SessionsPage() {
                 <p className="text-muted-foreground">No banner image</p>
               )}
             </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                  disabled={!isEditing && !isAdding}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -516,23 +559,45 @@ export default function SessionsPage() {
       </div>
 
       <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium">Search</label>
+        <CardContent className="p-6 space-y-6">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search sessions..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                className="pl-10"
               />
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setFilters({
+                search: "",
+                sessionType: "all",
+                difficultyLevel: "all",
+                trackId: "all",
+                speakerId: "all",
+                locationId: "all",
+                status: "all",
+                startTimeFrom: undefined,
+                startTimeTo: undefined,
+                endTimeFrom: undefined,
+                endTimeTo: undefined
+              })}
+            >
+              Clear Filters
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium">Session Type</label>
               <Select
                 value={filters.sessionType}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  sessionType: value === "all" ? undefined : value as SessionType
+                  sessionType: value as SessionType | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -554,7 +619,7 @@ export default function SessionsPage() {
                 value={filters.difficultyLevel}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  difficultyLevel: value === "all" ? undefined : value as DifficultyLevel
+                  difficultyLevel: value as DifficultyLevel | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -573,10 +638,10 @@ export default function SessionsPage() {
             <div>
               <label className="text-sm font-medium">Track</label>
               <Select
-                value={filters.trackId?.toString()}
+                value={filters.trackId}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  trackId: value === "all" ? undefined : Number(value)
+                  trackId: value as string | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -598,7 +663,7 @@ export default function SessionsPage() {
                 value={filters.speakerId}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  speakerId: value === "all" ? undefined : value
+                  speakerId: value as string | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -617,10 +682,10 @@ export default function SessionsPage() {
             <div>
               <label className="text-sm font-medium">Location</label>
               <Select
-                value={filters.locationId?.toString()}
+                value={filters.locationId}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  locationId: value === "all" ? undefined : Number(value)
+                  locationId: value as string | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -642,7 +707,7 @@ export default function SessionsPage() {
                 value={filters.status}
                 onValueChange={(value) => setFilters(prev => ({ 
                   ...prev, 
-                  status: value === "all" ? undefined : value
+                  status: value as string | "all"
                 }))}
               >
                 <SelectTrigger>
@@ -657,6 +722,139 @@ export default function SessionsPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Start Date Range</label>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal w-full",
+                        !filters.startTimeFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.startTimeFrom ? (
+                        format(new Date(filters.startTimeFrom), "PPP")
+                      ) : (
+                        "From"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.startTimeFrom ? new Date(filters.startTimeFrom) : undefined}
+                      onSelect={(date) => 
+                        setFilters(prev => ({ 
+                          ...prev, 
+                          startTimeFrom: date?.toISOString() 
+                        }))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal w-full",
+                        !filters.startTimeTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.startTimeTo ? (
+                        format(new Date(filters.startTimeTo), "PPP")
+                      ) : (
+                        "To"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.startTimeTo ? new Date(filters.startTimeTo) : undefined}
+                      onSelect={(date) => 
+                        setFilters(prev => ({ 
+                          ...prev, 
+                          startTimeTo: date?.toISOString() 
+                        }))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">End Date Range</label>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal w-full",
+                        !filters.endTimeFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.endTimeFrom ? (
+                        format(new Date(filters.endTimeFrom), "PPP")
+                      ) : (
+                        "From"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.endTimeFrom ? new Date(filters.endTimeFrom) : undefined}
+                      onSelect={(date) => 
+                        setFilters(prev => ({ 
+                          ...prev, 
+                          endTimeFrom: date?.toISOString() 
+                        }))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal w-full",
+                        !filters.endTimeTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.endTimeTo ? (
+                        format(new Date(filters.endTimeTo), "PPP")
+                      ) : (
+                        "To"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.endTimeTo ? new Date(filters.endTimeTo) : undefined}
+                      onSelect={(date) => 
+                        setFilters(prev => ({ 
+                          ...prev, 
+                          endTimeTo: date?.toISOString() 
+                        }))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
         </CardContent>
