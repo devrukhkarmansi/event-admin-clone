@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, Calendar, Users, LayoutGrid, Settings, LogOut, GitBranch, MapPin, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react"
+import { Home, Calendar, Users, LayoutGrid, Settings, LogOut, GitBranch, MapPin, ChevronLeft, ChevronRight, MoreVertical, UserCheck } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -46,9 +46,9 @@ const NAVIGATION_ITEMS = [
     icon: MapPin
   },
   {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings
+    title: "Check-ins",
+    href: "/dashboard/check-ins",
+    icon: UserCheck
   }
 ]
 
