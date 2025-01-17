@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSessions, useDeleteSession, useSession, useUpdateSession, useCreateSession } from "@/hooks/use-sessions"
-import { LoadingScreen } from "@/components/ui/loading-screen"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash2, Eye, ArrowLeft, Pencil, CalendarIcon, Plus, Search } from "lucide-react"
@@ -866,91 +865,87 @@ export default function SessionsPage() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
-        <LoadingScreen />
-      ) : (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>All Sessions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium">Title</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium">Track</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium">Type</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium">Start Time</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium">Difficulty</th>
-                    <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <TableSkeleton columns={6} rows={10} />
-                  ) : (
-                    sessions?.items.map((session: Session) => (
-                      <tr key={session.id} className="border-b">
-                        <td className="p-4">{session.title}</td>
-                        <td className="p-4">{session.tracks?.[0]?.name || '-'}</td>
-                        <td className="p-4">
-                          <span className="capitalize">{session.sessionType.toLowerCase()}</span>
-                        </td>
-                        <td className="p-4">
-                          {format(new Date(session.startTime), 'MMM d, yyyy HH:mm')}
-                        </td>
-                        <td className="p-4">
-                          <span className="capitalize">{session.difficultyLevel.toLowerCase()}</span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setViewId(session.id)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setViewId(session.id)
-                                setIsEditing(true)
-                              }}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteId(session.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>All Sessions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="h-12 px-4 text-left align-middle font-medium">Title</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">Track</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">Type</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">Start Time</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">Difficulty</th>
+                  <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <TableSkeleton columns={6} rows={10} />
+                ) : (
+                  sessions?.items.map((session: Session) => (
+                    <tr key={session.id} className="border-b">
+                      <td className="p-4">{session.title}</td>
+                      <td className="p-4">{session.tracks?.[0]?.name || '-'}</td>
+                      <td className="p-4">
+                        <span className="capitalize">{session.sessionType.toLowerCase()}</span>
+                      </td>
+                      <td className="p-4">
+                        {format(new Date(session.startTime), 'MMM d, yyyy HH:mm')}
+                      </td>
+                      <td className="p-4">
+                        <span className="capitalize">{session.difficultyLevel.toLowerCase()}</span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setViewId(session.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setViewId(session.id)
+                              setIsEditing(true)
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(session.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {sessions && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={page}
+                totalPages={sessions.meta.totalPages}
+                onPageChange={setPage}
+                totalItems={sessions.meta.totalItems}
+                pageSize={pageSize}
+              />
             </div>
-            {sessions && (
-              <div className="mt-4">
-                <Pagination
-                  currentPage={page}
-                  totalPages={sessions.meta.totalPages}
-                  onPageChange={setPage}
-                  totalItems={sessions.meta.totalItems}
-                  pageSize={pageSize}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={!!deleteId}

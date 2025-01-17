@@ -116,11 +116,11 @@ export default function CheckInsPage() {
                   </th>
                 </tr>
               </thead>
-              {isLoading ? (
-                <TableSkeleton columns={3} rows={10} />
-              ) : (
-                <tbody>
-                  {checkIns?.items.map((checkIn) => (
+              <tbody>
+                {isLoading ? (
+                  <TableSkeleton columns={3} rows={10} />
+                ) : (
+                  checkIns?.items.map((checkIn) => (
                     <tr key={checkIn.id} className="border-b">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -139,9 +139,9 @@ export default function CheckInsPage() {
                         {format(new Date(checkIn.createdAt), "PPP p")}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              )}
+                  ))
+                )}
+              </tbody>
             </table>
           </div>
 

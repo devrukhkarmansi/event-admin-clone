@@ -21,14 +21,17 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card 
           className={cn(
-            "cursor-pointer transition-colors hover:bg-muted/50",
-            "transform hover:scale-[1.02] transition-transform"
+            "cursor-pointer transition-colors",
+            "transform hover:scale-[1.02] transition-transform",
+            "relative overflow-hidden"
           )}
           onClick={() => router.push('/dashboard/users')}
         >
+          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/10 to-transparent" />
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-8 w-8 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users?.meta.totalItems || 0}</div>
@@ -40,14 +43,17 @@ export default function DashboardPage() {
         
         <Card
           className={cn(
-            "cursor-pointer transition-colors hover:bg-muted/50",
-            "transform hover:scale-[1.02] transition-transform"
+            "cursor-pointer transition-colors",
+            "transform hover:scale-[1.02] transition-transform",
+            "relative overflow-hidden"
           )}
           onClick={() => router.push('/dashboard/check-ins')}
         >
+          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-green-500/10 to-transparent" />
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-green-500/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today&apos;s Check-ins</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <UserCheck className="h-8 w-8 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{checkIns?.count || 0}</div>
@@ -59,14 +65,17 @@ export default function DashboardPage() {
         
         <Card
           className={cn(
-            "cursor-pointer transition-colors hover:bg-muted/50",
-            "transform hover:scale-[1.02] transition-transform"
+            "cursor-pointer transition-colors",
+            "transform hover:scale-[1.02] transition-transform",
+            "relative overflow-hidden"
           )}
           onClick={() => router.push('/dashboard/sessions')}
         >
+          <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-blue-500/10 to-transparent" />
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-8 w-8 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{sessions?.meta.totalItems || 0}</div>
