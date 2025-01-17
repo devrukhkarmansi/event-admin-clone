@@ -10,6 +10,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Location } from "@/services/locations/types"
+import { TableSkeleton } from "@/components/table-skeleton"
 
 export default function LocationsPage() {
   const { data: locations, isLoading } = useLocations()
@@ -62,27 +63,31 @@ export default function LocationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {locations?.map((location: Location) => (
-                    <tr key={location.id} className="border-b">
-                      <td className="p-4">{location.name}</td>
-                      <td className="p-4">{location.description}</td>
-                      <td className="p-4">{location.capacity}</td>
-                      <td className="p-4">{location.floor}</td>
-                      <td className="p-4">{location.building}</td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <LocationFormDialog mode="edit" location={location} />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(location.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {isLoading ? (
+                    <TableSkeleton columns={3} rows={10} />
+                  ) : (
+                    locations?.map((location: Location) => (
+                      <tr key={location.id} className="border-b">
+                        <td className="p-4">{location.name}</td>
+                        <td className="p-4">{location.description}</td>
+                        <td className="p-4">{location.capacity}</td>
+                        <td className="p-4">{location.floor}</td>
+                        <td className="p-4">{location.building}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <LocationFormDialog mode="edit" location={location} />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteId(location.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

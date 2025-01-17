@@ -24,6 +24,7 @@ import { FileUpload } from "@/components/ui/file-upload"
 import { Pagination } from "@/components/ui/pagination"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
+import { TableSkeleton } from "@/components/table-skeleton"
 
 export default function SessionsPage() {
   const sessionTypes = [
@@ -886,49 +887,53 @@ export default function SessionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions?.items.map((session: Session) => (
-                    <tr key={session.id} className="border-b">
-                      <td className="p-4">{session.title}</td>
-                      <td className="p-4">{session.tracks?.[0]?.name || '-'}</td>
-                      <td className="p-4">
-                        <span className="capitalize">{session.sessionType.toLowerCase()}</span>
-                      </td>
-                      <td className="p-4">
-                        {format(new Date(session.startTime), 'MMM d, yyyy HH:mm')}
-                      </td>
-                      <td className="p-4">
-                        <span className="capitalize">{session.difficultyLevel.toLowerCase()}</span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setViewId(session.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setViewId(session.id)
-                              setIsEditing(true)
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(session.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {isLoading ? (
+                    <TableSkeleton columns={6} rows={10} />
+                  ) : (
+                    sessions?.items.map((session: Session) => (
+                      <tr key={session.id} className="border-b">
+                        <td className="p-4">{session.title}</td>
+                        <td className="p-4">{session.tracks?.[0]?.name || '-'}</td>
+                        <td className="p-4">
+                          <span className="capitalize">{session.sessionType.toLowerCase()}</span>
+                        </td>
+                        <td className="p-4">
+                          {format(new Date(session.startTime), 'MMM d, yyyy HH:mm')}
+                        </td>
+                        <td className="p-4">
+                          <span className="capitalize">{session.difficultyLevel.toLowerCase()}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setViewId(session.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setViewId(session.id)
+                                setIsEditing(true)
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteId(session.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

@@ -10,6 +10,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Track } from "@/services/tracks/types"
+import { TableSkeleton } from "@/components/table-skeleton"
 
 export default function TracksPage() {
   const { data: tracks, isLoading } = useTracks()
@@ -59,24 +60,28 @@ export default function TracksPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tracks?.map((track: Track) => (
-                    <tr key={track.id} className="border-b">
-                      <td className="p-4">{track.name}</td>
-                      <td className="p-4">{track.description}</td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <TrackFormDialog mode="edit" track={track} />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(track.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {isLoading ? (
+                    <TableSkeleton columns={4} rows={10} />
+                  ) : (
+                    tracks?.map((track: Track) => (
+                      <tr key={track.id} className="border-b">
+                        <td className="p-4">{track.name}</td>
+                        <td className="p-4">{track.description}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <TrackFormDialog mode="edit" track={track} />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteId(track.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

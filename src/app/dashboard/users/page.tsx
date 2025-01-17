@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { usersService } from "@/services/users/users.service"
 import { useToast } from "@/hooks/use-toast"
 import { Pagination } from "@/components/ui/pagination"
+import { TableSkeleton } from "@/components/table-skeleton"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)
@@ -106,35 +107,39 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.items.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="flex items-center gap-3">
-                        <UserAvatar 
-                          src={user.profileImage?.url} 
-                          firstName={user.firstName}
-                          lastName={user.lastName}
-                        />
-                        <span className="truncate">{user.firstName} {user.lastName}</span>
-                      </TableCell>
-                      <TableCell className="truncate">{user.email}</TableCell>
-                      <TableCell>{user.phoneNumber || '-'}</TableCell>
-                      <TableCell className="capitalize">{user.role?.name || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {user.company?.logo && (
-                            <Image 
-                              src={user.company.logo.url} 
-                              alt={user.company.name || ''}
-                              width={24}
-                              height={24}
-                              className="rounded object-contain"
-                            />
-                          )}
-                          <span className="truncate">{user.company?.name || '-'}</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {isLoading ? (
+                    <TableSkeleton columns={5} rows={10} />
+                  ) : (
+                    users.items.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="flex items-center gap-3">
+                          <UserAvatar 
+                            src={user.profileImage?.url} 
+                            firstName={user.firstName}
+                            lastName={user.lastName}
+                          />
+                          <span className="truncate">{user.firstName} {user.lastName}</span>
+                        </TableCell>
+                        <TableCell className="truncate">{user.email}</TableCell>
+                        <TableCell>{user.phoneNumber || '-'}</TableCell>
+                        <TableCell className="capitalize">{user.role?.name || '-'}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {user.company?.logo && (
+                              <Image 
+                                src={user.company.logo.url} 
+                                alt={user.company.name || ''}
+                                width={24}
+                                height={24}
+                                className="rounded object-contain"
+                              />
+                            )}
+                            <span className="truncate">{user.company?.name || '-'}</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
 
