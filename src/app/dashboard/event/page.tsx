@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { FileUpload } from "@/components/ui/file-upload"
+import { MarkdownContent } from "@/components/markdown-content"
 
 const sponsorTypeStyles = {
   [SponsorType.PLATINUM]: 'bg-violet-100 text-violet-800',
@@ -235,11 +236,23 @@ export default function EventPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  value={isEditing ? formData.description : event.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  disabled={!isEditing}
-                />
+                {isEditing ? (
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Event description (supports markdown)"
+                    className="mt-2"
+                    rows={6}
+                  />
+                ) : (
+                  <div className="mt-2">
+                    {event?.description ? (
+                      <MarkdownContent content={event.description} />
+                    ) : (
+                      <p className="text-muted-foreground">No description</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium">Address</label>

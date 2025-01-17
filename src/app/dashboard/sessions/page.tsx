@@ -24,6 +24,7 @@ import { Pagination } from "@/components/ui/pagination"
 import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { TableSkeleton } from "@/components/table-skeleton"
+import { MarkdownContent } from "@/components/markdown-content"
 
 export default function SessionsPage() {
   const sessionTypes = [
@@ -326,7 +327,23 @@ export default function SessionsPage() {
 
             <div>
               <label className="text-sm font-medium">Description</label>
-              <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} disabled={!isEditing && !isAdding} className="mt-2" />
+              {isEditing || isAdding ? (
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Session description (supports markdown)"
+                  className="mt-2"
+                  rows={6}
+                />
+              ) : (
+                <div className="mt-2 text-muted-foreground">
+                  {currentSession?.description ? (
+                    <MarkdownContent content={currentSession.description} />
+                  ) : (
+                    "No description"
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-6">
