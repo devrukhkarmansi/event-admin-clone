@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload } from "lucide-react"
+import { Upload, Search, ArrowUpDown } from "lucide-react"
 import { useUsers } from "@/hooks/use-users"
+import { User } from "@/services/users/types"
 import {
   Table,
   TableBody,
@@ -20,14 +21,31 @@ import { usersService } from "@/services/users/users.service"
 import { useToast } from "@/hooks/use-toast"
 import { Pagination } from "@/components/ui/pagination"
 import { TableSkeleton } from "@/components/table-skeleton"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)
   const limit = 10
-  const { data: users, isLoading } = useUsers(page, limit)
+  const [filters, setFilters] = useState({
+    search: "",
+    role: "all",
+    sortBy: "createdAt",
+    sortOrder: "DESC" as "ASC" | "DESC"
+  })
+  const { data: users, isLoading } = useUsers({
+    page,
+    limit,
+    ...filters,
+    role: filters.role === "all" ? undefined : filters.role,
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true)
   
   const importMutation = useMutation({
     mutationFn: (file: File) => usersService.importUsers(file),
@@ -81,6 +99,102 @@ export default function UsersPage() {
       </div>
 
       <Card>
+        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <CardHeader className="cursor-pointer hover:bg-muted/50">
+            <CollapsibleTrigger className="flex items-center justify-between w-full">
+              <CardTitle>Filters</CardTitle>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", {
+                "-rotate-180": isFiltersOpen
+              })} />
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users..."
+                        value={filters.search}
+                        onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters({
+                      search: "",
+                      role: "all",
+                      sortBy: "createdAt",
+                      sortOrder: "DESC"
+                    })}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+                <div className="flex gap-4">
+                  <Select
+                    value={filters.role}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="organizer">Organizer</SelectItem>
+                      <SelectItem value="volunteer">Volunteer</SelectItem>
+                      <SelectItem value="speaker">Speaker</SelectItem>
+                      <SelectItem value="attendee">Attendee</SelectItem>
+                      <SelectItem value="delegate">Delegate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={filters.sortBy}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by">
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {filters.sortBy === "name" ? "Sort by Name" :
+                             filters.sortBy === "role" ? "Sort by Role" :
+                             filters.sortBy === "createdAt" ? "Sort by Created Date" :
+                             "Sort by"}
+                          </span>
+                          <ArrowUpDown className="h-4 w-4" />
+                        </div>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Sort by Name</SelectItem>
+                      <SelectItem value="role">Sort by Role</SelectItem>
+                      <SelectItem value="createdAt">Sort by Created Date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters(prev => ({ 
+                      ...prev, 
+                      sortOrder: prev.sortOrder === "DESC" ? "ASC" : "DESC" 
+                    }))}
+                    className="flex items-center gap-2"
+                  >
+                    {filters.sortOrder === "DESC" ? "Newest First" : "Oldest First"}
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>All Users</CardTitle>
@@ -110,7 +224,7 @@ export default function UsersPage() {
                   {isLoading ? (
                     <TableSkeleton columns={5} rows={10} />
                   ) : (
-                    users.items.map((user) => (
+                    users.items.map((user: User) => (
                       <TableRow key={user.id}>
                         <TableCell className="flex items-center gap-3">
                           <UserAvatar 

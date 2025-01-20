@@ -25,6 +25,8 @@ import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { TableSkeleton } from "@/components/table-skeleton"
 import { MarkdownContent } from "@/components/markdown-content"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ChevronDown } from "lucide-react"
 
 export default function SessionsPage() {
   const sessionTypes = [
@@ -84,6 +86,7 @@ export default function SessionsPage() {
   const uploadMedia = useUploadMedia()
   const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | undefined>(undefined)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true)
 
   const emptySession = useMemo(() => ({
     title: "",
@@ -581,305 +584,317 @@ export default function SessionsPage() {
       </div>
 
       <Card className="mb-6">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search sessions..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="pl-10"
-              />
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setFilters({
-                search: "",
-                sessionType: "all",
-                difficultyLevel: "all",
-                trackId: "all",
-                speakerId: "all",
-                locationId: "all",
-                status: "all",
-                startTimeFrom: undefined,
-                startTimeTo: undefined,
-                endTimeFrom: undefined,
-                endTimeTo: undefined
-              })}
-            >
-              Clear Filters
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium">Session Type</label>
-              <Select
-                value={filters.sessionType}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  sessionType: value as SessionType | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  {sessionTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Difficulty Level</label>
-              <Select
-                value={filters.difficultyLevel}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  difficultyLevel: value as DifficultyLevel | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All levels" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All levels</SelectItem>
-                  {difficultyLevels.map(level => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Track</label>
-              <Select
-                value={filters.trackId}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  trackId: value as string | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All tracks" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All tracks</SelectItem>
-                  {tracks?.map(track => (
-                    <SelectItem key={track.id} value={track.id.toString()}>
-                      {track.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Speaker</label>
-              <Select
-                value={filters.speakerId}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  speakerId: value as string | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All speakers" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All speakers</SelectItem>
-                  {users?.items.map(user => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.firstName} {user.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Location</label>
-              <Select
-                value={filters.locationId}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  locationId: value as string | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All locations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All locations</SelectItem>
-                  {locations?.map(location => (
-                    <SelectItem key={location.id} value={location.id.toString()}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Status</label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  status: value as string | "all"
-                }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  {statusOptions.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Start Date Range</label>
-              <div className="flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal w-full",
-                        !filters.startTimeFrom && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.startTimeFrom ? (
-                        format(new Date(filters.startTimeFrom), "PPP")
-                      ) : (
-                        "From"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={filters.startTimeFrom ? new Date(filters.startTimeFrom) : undefined}
-                      onSelect={(date) => 
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          startTimeFrom: date?.toISOString() 
-                        }))
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal w-full",
-                        !filters.startTimeTo && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.startTimeTo ? (
-                        format(new Date(filters.startTimeTo), "PPP")
-                      ) : (
-                        "To"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={filters.startTimeTo ? new Date(filters.startTimeTo) : undefined}
-                      onSelect={(date) => 
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          startTimeTo: date?.toISOString() 
-                        }))
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
+        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          <CardHeader className="cursor-pointer hover:bg-muted/50">
+            <CollapsibleTrigger className="flex items-center justify-between w-full">
+              <CardTitle>Filters</CardTitle>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", {
+                "-rotate-180": isFiltersOpen
+              })} />
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="p-6 space-y-6">
+              <div className="flex gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search sessions..."
+                    value={filters.search}
+                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    className="pl-10"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setFilters({
+                    search: "",
+                    sessionType: "all",
+                    difficultyLevel: "all",
+                    trackId: "all",
+                    speakerId: "all",
+                    locationId: "all",
+                    status: "all",
+                    startTimeFrom: undefined,
+                    startTimeTo: undefined,
+                    endTimeFrom: undefined,
+                    endTimeTo: undefined
+                  })}
+                >
+                  Clear Filters
+                </Button>
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">End Date Range</label>
-              <div className="flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal w-full",
-                        !filters.endTimeFrom && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.endTimeFrom ? (
-                        format(new Date(filters.endTimeFrom), "PPP")
-                      ) : (
-                        "From"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={filters.endTimeFrom ? new Date(filters.endTimeFrom) : undefined}
-                      onSelect={(date) => 
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          endTimeFrom: date?.toISOString() 
-                        }))
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal w-full",
-                        !filters.endTimeTo && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {filters.endTimeTo ? (
-                        format(new Date(filters.endTimeTo), "PPP")
-                      ) : (
-                        "To"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={filters.endTimeTo ? new Date(filters.endTimeTo) : undefined}
-                      onSelect={(date) => 
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          endTimeTo: date?.toISOString() 
-                        }))
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Session Type</label>
+                  <Select
+                    value={filters.sessionType}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      sessionType: value as SessionType | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      {sessionTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Difficulty Level</label>
+                  <Select
+                    value={filters.difficultyLevel}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      difficultyLevel: value as DifficultyLevel | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All levels" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All levels</SelectItem>
+                      {difficultyLevels.map(level => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Track</label>
+                  <Select
+                    value={filters.trackId}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      trackId: value as string | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All tracks" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All tracks</SelectItem>
+                      {tracks?.map(track => (
+                        <SelectItem key={track.id} value={track.id.toString()}>
+                          {track.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Speaker</label>
+                  <Select
+                    value={filters.speakerId}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      speakerId: value as string | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All speakers" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All speakers</SelectItem>
+                      {users?.items.map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.firstName} {user.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Location</label>
+                  <Select
+                    value={filters.locationId}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      locationId: value as string | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All locations" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All locations</SelectItem>
+                      {locations?.map(location => (
+                        <SelectItem key={location.id} value={location.id.toString()}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Status</label>
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) => setFilters(prev => ({ 
+                      ...prev, 
+                      status: value as string | "all"
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      {statusOptions.map(status => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Start Date Range</label>
+                  <div className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "justify-start text-left font-normal w-full",
+                            !filters.startTimeFrom && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.startTimeFrom ? (
+                            format(new Date(filters.startTimeFrom), "PPP")
+                          ) : (
+                            "From"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.startTimeFrom ? new Date(filters.startTimeFrom) : undefined}
+                          onSelect={(date) => 
+                            setFilters(prev => ({ 
+                              ...prev, 
+                              startTimeFrom: date?.toISOString() 
+                            }))
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "justify-start text-left font-normal w-full",
+                            !filters.startTimeTo && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.startTimeTo ? (
+                            format(new Date(filters.startTimeTo), "PPP")
+                          ) : (
+                            "To"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.startTimeTo ? new Date(filters.startTimeTo) : undefined}
+                          onSelect={(date) => 
+                            setFilters(prev => ({ 
+                              ...prev, 
+                              startTimeTo: date?.toISOString() 
+                            }))
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">End Date Range</label>
+                  <div className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "justify-start text-left font-normal w-full",
+                            !filters.endTimeFrom && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.endTimeFrom ? (
+                            format(new Date(filters.endTimeFrom), "PPP")
+                          ) : (
+                            "From"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.endTimeFrom ? new Date(filters.endTimeFrom) : undefined}
+                          onSelect={(date) => 
+                            setFilters(prev => ({ 
+                              ...prev, 
+                              endTimeFrom: date?.toISOString() 
+                            }))
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "justify-start text-left font-normal w-full",
+                            !filters.endTimeTo && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.endTimeTo ? (
+                            format(new Date(filters.endTimeTo), "PPP")
+                          ) : (
+                            "To"
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.endTimeTo ? new Date(filters.endTimeTo) : undefined}
+                          onSelect={(date) => 
+                            setFilters(prev => ({ 
+                              ...prev, 
+                              endTimeTo: date?.toISOString() 
+                            }))
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       <Card>
