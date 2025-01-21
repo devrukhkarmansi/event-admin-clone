@@ -21,6 +21,7 @@ export interface Session {
   capacity: number
   difficultyLevel: DifficultyLevel
   status: string
+  isHighlighted: boolean
   trackId?: number
   tracks?: {
     id: number
@@ -65,6 +66,7 @@ export interface CreateSessionParams {
     url: string
   }
   status?: string
+  isHighlighted?: boolean
 }
 
 export interface UpdateSessionParams extends Partial<CreateSessionParams> {
@@ -84,6 +86,7 @@ export interface SessionFilters {
   trackId?: number
   speakerId?: string
   status?: string
+  isHighlighted?: boolean
   page?: number
   limit?: number
 }

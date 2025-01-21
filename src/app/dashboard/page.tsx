@@ -2,17 +2,28 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useUsers } from "@/hooks/use-users"
-import { useSessions } from "@/hooks/use-sessions"
-import { Users, Calendar, UserCheck } from "lucide-react"
+import { useSessions, useHighlightedSessions } from "@/hooks/use-sessions"
+import { Users, Calendar, UserCheck, Star } from "lucide-react"
 import { useCheckInCount } from "@/hooks/use-check-ins"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import Link from "next/link"
+import Image from "next/image"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 export default function DashboardPage() {
   const { data: users } = useUsers()
   const { data: sessions } = useSessions({})
   const { data: checkIns } = useCheckInCount()
   const router = useRouter()
+  const { data: highlightedSessions } = useHighlightedSessions(6)
 
   return (
     <div className="p-8 space-y-8">
@@ -85,6 +96,72 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {highlightedSessions?.items && highlightedSessions.items.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              <CardTitle>Featured Sessions</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full relative mx-auto px-4"
+            >
+              <CarouselContent>
+                {(highlightedSessions?.items || []).map((session) => (
+                  <CarouselItem key={session.id} className="basis-full md:basis-1/2 lg:basis-1/3">
+                    <Link 
+                      href={`/dashboard/sessions?viewId=${session.id}`}
+                      className="group block relative overflow-hidden rounded-lg m-2 hover:ring-2 hover:ring-primary transition-all"
+                    >
+                      <div className="aspect-[16/9] relative">
+                        {session.banner ? (
+                          <Image
+                            src={session.banner.url}
+                            alt={session.title}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <Star className="h-8 w-8 text-muted-foreground/50" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium group-hover:text-primary transition-colors line-clamp-1">
+                          {session.title}
+                        </h3>
+                        <div className="mt-2 flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <span className="capitalize">
+                            {session.sessionType.toLowerCase()}
+                          </span>
+                          <span>•</span>
+                          <span>
+                            {format(new Date(session.startTime), 'MMM d, HH:mm')}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {highlightedSessions.items.length > 3 && (
+                <>
+                  <CarouselPrevious className="absolute -left-4 hover:bg-background top-1/2 -translate-y-1/2" />
+                  <CarouselNext className="absolute -right-4 hover:bg-background top-1/2 -translate-y-1/2" />
+                </>
+              )}
+            </Carousel>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 } 
