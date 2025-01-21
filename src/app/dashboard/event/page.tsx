@@ -461,12 +461,10 @@ export default function EventPage() {
                     accept="image/*"
                     onChange={handleFloorPlanChange}
                     multiple
-                    value={formData.floorPlans.map(fp => 
-                      fp.file ? URL.createObjectURL(fp.file) : 
-                      event?.floorPlans?.find(f => f.id === fp.id)?.media.url || ''
-                    )}
+                    value={undefined}
+                    className="mb-4"
                   />
-                  <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid grid-cols-2 gap-4">
                     {formData.floorPlans.map((floorPlan, index) => (
                       <div key={floorPlan.id || index} className="relative group">
                         <div className="relative aspect-video rounded-lg overflow-hidden border">
