@@ -34,6 +34,24 @@ export interface Event {
   sponsors?: Sponsor[];
   createdAt: string;
   updatedAt: string;
+  floorPlans?: FloorPlan[];
+}
+
+export interface FloorPlan {
+  id: number;
+  eventId: number;
+  mediaId: number;
+  label: string;
+  createdAt: string;
+  updatedAt: string;
+  media: {
+    id: number;
+    fileName: string;
+    url: string;
+    assetId: string;
+    creatorId: string;
+    provider: string;
+  };
 }
 
 export interface CreateSponsorParams {

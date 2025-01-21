@@ -4,10 +4,10 @@ import { PaginatedResponse } from '../common/types'
 
 export interface UpdateEventParams {
   id: number
-  name: string
-  description: string
-  logo?: { id: number }
-  address: {
+  name?: string
+  description?: string
+  logoId?: number
+  address?: {
     line1: string
     line2?: string
     city: string
@@ -15,6 +15,11 @@ export interface UpdateEventParams {
     country: string
     postalCode: string
   }
+  floorPlans?: {
+    id?: number
+    mediaId: number
+    label: string
+  }[]
 }
 
 export const eventsService = {
@@ -34,8 +39,9 @@ export const eventsService = {
     const transformedData = {
       name: data.name,
       description: data.description,
-      logoId: data.logo?.id,
-      address: data.address
+      logoId: data.logoId,
+      address: data.address,
+      floorPlans: data.floorPlans
     }
     return api.put<Event>(`/admin/event/${data.id}`, transformedData as unknown as Record<string, unknown>)
   },

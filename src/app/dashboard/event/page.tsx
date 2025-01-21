@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { Pencil, Save, X } from 'lucide-react'
+import { Pencil, Save, X, LayoutTemplate } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import Image from "next/image"
 import { useState, useEffect } from 'react'
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -29,6 +31,18 @@ interface FormData {
     country: string
     postalCode: string
   }
+  floorPlans: {
+    id?: number
+    mediaId?: number
+    file?: File
+    label: string
+  }[]
+}
+
+interface FloorPlanUpdate {
+  id?: number;
+  mediaId: number;
+  label: string;
 }
 
 export default function EventPage() {
@@ -37,6 +51,7 @@ export default function EventPage() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [showFloorPlans, setShowFloorPlans] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -49,7 +64,8 @@ export default function EventPage() {
       state: "",
       country: "",
       postalCode: ""
-    }
+    },
+    floorPlans: []
   })
 
   const updateMutation = useMutation({
@@ -98,6 +114,41 @@ export default function EventPage() {
     }
   }
 
+  const handleFloorPlanChange = async (files: File | null) => {
+    if (!files) return;
+    
+    // Create a new FileReader to get preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newFloorPlan = {
+        file: files,
+        label: 'New Floor Plan'
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        floorPlans: [...prev.floorPlans, newFloorPlan]
+      }));
+    };
+    reader.readAsDataURL(files);
+  };
+
+  const handleFloorPlanLabelChange = (index: number, label: string) => {
+    setFormData(prev => ({
+      ...prev,
+      floorPlans: prev.floorPlans.map((fp, i) => 
+        i === index ? { ...fp, label } : fp
+      )
+    }));
+  }
+
+  const handleRemoveFloorPlan = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      floorPlans: prev.floorPlans.filter((_, i) => i !== index)
+    }));
+  }
+
   useEffect(() => {
     if (event) {
       setFormData({
@@ -111,7 +162,12 @@ export default function EventPage() {
           state: event.address.state || "",
           country: event.address.country || "",
           postalCode: event.address.postalCode || ""
-        }
+        },
+        floorPlans: event.floorPlans?.map(fp => ({
+          id: fp.id,
+          mediaId: fp.mediaId,
+          label: fp.label
+        })) || []
       })
     }
   }, [event])
@@ -129,9 +185,92 @@ export default function EventPage() {
         state: event!.address.state,
         country: event!.address.country,
         postalCode: event!.address.postalCode
-      }
+      },
+      floorPlans: event!.floorPlans?.map(fp => ({
+        id: fp.id,
+        mediaId: fp.mediaId,
+        label: fp.label
+      })) || []
     })
   }
+
+  const handleSave = async () => {
+    if (!event) return;
+    console.log(formData)
+    try {
+      // First upload any new floor plan images
+      const floorPlanUploads = await Promise.all(
+        formData.floorPlans
+          .filter(fp => fp.file)
+          .map(async fp => {
+            const { id: mediaId, url } = await uploadLogo.mutateAsync({
+              file: fp.file!,
+              mediaType: MediaType.EVENT_FLOOR_PLAN
+            });
+            return { ...fp, mediaId, url };
+          })
+      );
+
+      // Prepare floor plans data
+      const floorPlans = formData.floorPlans
+        .map(fp => {
+          if (fp.file) {
+            const uploaded = floorPlanUploads.find(u => u.file === fp.file);
+            if (!uploaded?.mediaId) return null;
+            return {
+              mediaId: uploaded.mediaId,
+              label: fp.label
+            };
+          }
+          if (!fp.mediaId) return null;
+          return {
+            id: fp.id,
+            mediaId: fp.mediaId,
+            label: fp.label
+          };
+        })
+        .filter((fp): fp is FloorPlanUpdate => fp !== null);
+
+        console.log("ewgewgew ",{id: event.id,
+          name: formData.name,
+          description: formData.description,
+          logoId: formData.logo?.id,
+          address: {
+            line1: formData.address.line1,
+            line2: formData.address.line2,
+            city: formData.address.city,
+            state: formData.address.state,
+            country: formData.address.country,
+            postalCode: formData.address.postalCode
+          },
+          floorPlans })
+
+      // Update event with all data in one call
+      await updateMutation.mutateAsync({ 
+        id: event.id,
+        name: formData.name,
+        description: formData.description,
+        logoId: formData.logo?.id,
+        address: {
+          line1: formData.address.line1,
+          line2: formData.address.line2,
+          city: formData.address.city,
+          state: formData.address.state,
+          country: formData.address.country,
+          postalCode: formData.address.postalCode
+        },
+        floorPlans  // Include floor plans in the same payload
+      });
+
+    } catch (error) {
+      console.error('Failed to update event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update event",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (eventLoading ) {
     return <LoadingScreen />
@@ -150,34 +289,42 @@ export default function EventPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Event Information</CardTitle>
-              {!isEditing ? (
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit Event
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFloorPlans(true)}
+                  disabled={!event?.floorPlans?.length}
+                >
+                  <LayoutTemplate className="mr-2 h-4 w-4" />
+                  View Floor Plans
                 </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleCancel}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
+                {!isEditing ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Event
                   </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={() => updateMutation.mutate({ 
-                      ...formData,
-                      id: event.id,
-                    })}
-                    disabled={updateMutation.isPending}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
-              )}
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleCancel}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSave}
+                      disabled={updateMutation.isPending}
+                    >
+                      <Save className="mr-2 h-4 w-4" />
+                      {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -185,13 +332,16 @@ export default function EventPage() {
               {isEditing && (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Logo</label>
-                  <FileUpload
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    loading={uploadingLogo}
-                    disabled={updateMutation.isPending}
-                    value={formData.logo?.url}
-                  />
+                  <div className="max-w-[300px] mx-auto">
+                    <FileUpload
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      loading={uploadingLogo}
+                      disabled={updateMutation.isPending}
+                      value={formData.logo?.url}
+                      className="h-[300px]"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -303,10 +453,77 @@ export default function EventPage() {
                   </div>
                 </div>
               </div>
+
+              {isEditing && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Floor Plans</label>
+                  <FileUpload
+                    accept="image/*"
+                    onChange={handleFloorPlanChange}
+                    multiple
+                    value={formData.floorPlans.map(fp => 
+                      fp.file ? URL.createObjectURL(fp.file) : 
+                      event?.floorPlans?.find(f => f.id === fp.id)?.media.url || ''
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    {formData.floorPlans.map((floorPlan, index) => (
+                      <div key={floorPlan.id || index} className="relative group">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border">
+                          <Image
+                            src={floorPlan.file ? URL.createObjectURL(floorPlan.file) : 
+                              event?.floorPlans?.find(fp => fp.id === floorPlan.id)?.media.url || ''}
+                            alt={floorPlan.label}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <Input
+                          value={floorPlan.label}
+                          onChange={(e) => handleFloorPlanLabelChange(index, e.target.value)}
+                          className="mt-2"
+                          placeholder="Floor Plan Label"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRemoveFloorPlan(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showFloorPlans} onOpenChange={setShowFloorPlans}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Event Floor Plans</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {event?.floorPlans?.map((floorPlan) => (
+              <div key={floorPlan.id} className="space-y-2">
+                <div className="relative aspect-video rounded-lg overflow-hidden border">
+                  <Image
+                    src={floorPlan.media.url}
+                    alt={floorPlan.label}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <p className="text-sm font-medium text-center">{floorPlan.label}</p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

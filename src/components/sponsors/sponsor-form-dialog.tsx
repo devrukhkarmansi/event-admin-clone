@@ -41,7 +41,14 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
 
   const handleLogoChange = (file: File | null) => {
     if (file) {
-      setLogo({ file })
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogo({ 
+          file,
+          url: reader.result as string 
+        })
+      }
+      reader.readAsDataURL(file)
       setShouldRemoveLogo(false)
     } else {
       setLogo({})
