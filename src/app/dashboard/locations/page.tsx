@@ -5,17 +5,23 @@ import { useLocations, useDeleteLocation } from "@/hooks/use-locations"
 import { LocationFormDialog } from "@/components/locations/location-form-dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
-import { Trash2 } from "lucide-react"
-import { useState } from "react"
+import { Trash2, Eye } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Location } from "@/services/locations/types"
 import { TableSkeleton } from "@/components/table-skeleton"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import Image from "next/image"
+import { cn } from "@/lib/utils"
 
 export default function LocationsPage() {
   const { data: locations, isLoading } = useLocations()
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [previewLocation, setPreviewLocation] = useState<Location | null>(null)
   const deleteLocation = useDeleteLocation()
   const { toast } = useToast()
+  const [selectedFloorPlan, setSelectedFloorPlan] = useState<File | null>(null)
+  const [floorPlanPreview, setFloorPlanPreview] = useState<string | undefined>(undefined)
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -34,8 +40,45 @@ export default function LocationsPage() {
     }
   }
 
+  const handleFloorPlanSelect = (file: File | null) => {
+    setSelectedFloorPlan(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFloorPlanPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setFloorPlanPreview(undefined)
+    }
+  }
+
+  useEffect(() => {
+    if (locations?.find((location: Location) => location.id === deleteId)) {
+      setDeleteId(null)
+    }
+  }, [locations, deleteId])
+
   return (
     <div className="p-6">
+      <Dialog open={!!previewLocation} onOpenChange={() => setPreviewLocation(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Floor Plan - {previewLocation?.name}</DialogTitle>
+          </DialogHeader>
+          {previewLocation?.floorPlan && (
+            <div className="relative aspect-video">
+              <Image
+                src={previewLocation.floorPlan.url}
+                alt={`${previewLocation.name} floor plan`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Locations</h1>
       </div>
@@ -43,7 +86,12 @@ export default function LocationsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>All Locations</CardTitle>
-          <LocationFormDialog mode="create" />
+          <LocationFormDialog 
+            mode="create"
+            selectedFloorPlan={selectedFloorPlan}
+            floorPlanPreview={floorPlanPreview}
+            onFloorPlanSelect={handleFloorPlanSelect}
+          />
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -60,7 +108,7 @@ export default function LocationsPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <TableSkeleton columns={3} rows={10} />
+                  <TableSkeleton columns={6} rows={10} />
                 ) : (
                   locations?.map((location: Location) => (
                     <tr key={location.id} className="border-b">
@@ -71,7 +119,24 @@ export default function LocationsPage() {
                       <td className="p-4">{location.building}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <LocationFormDialog mode="edit" location={location} />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={!location.floorPlan}
+                            onClick={() => setPreviewLocation(location)}
+                          >
+                            <Eye className={cn(
+                              "h-4 w-4",
+                              !location.floorPlan && "text-muted-foreground"
+                            )} />
+                          </Button>
+                          <LocationFormDialog 
+                            mode="edit" 
+                            location={location}
+                            selectedFloorPlan={selectedFloorPlan}
+                            floorPlanPreview={floorPlanPreview}
+                            onFloorPlanSelect={handleFloorPlanSelect}
+                          />
                           <Button
                             variant="ghost"
                             size="icon"
