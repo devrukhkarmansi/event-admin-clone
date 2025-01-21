@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload, Search, ArrowUpDown } from "lucide-react"
-import { useUsers } from "@/hooks/use-users"
+import { Upload, Search, ArrowUpDown, Eye, ArrowLeft } from "lucide-react"
+import { useUsers, useUser } from "@/hooks/use-users"
 import { User } from "@/services/users/types"
 import {
   Table,
@@ -26,6 +26,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)
@@ -46,6 +49,8 @@ export default function UsersPage() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [isFiltersOpen, setIsFiltersOpen] = useState(true)
+  const [viewId, setViewId] = useState<string | null>(null)
+  const { data: currentUser } = useUser(viewId || "")
   
   const importMutation = useMutation({
     mutationFn: (file: File) => usersService.importUsers(file),
@@ -76,6 +81,174 @@ export default function UsersPage() {
         }
       })
     }
+  }
+
+  if (viewId && currentUser) {
+    return (
+      <div className="space-y-4 p-8">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setViewId(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Users
+          </Button>
+        </div>
+        
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="relative w-full rounded-lg">
+                  <div className="relative w-full h-64 bg-muted">
+                    <Image
+                      src={currentUser.profileBanner?.url || '/images/default-banner.png'}
+                      alt="Profile"
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+                  
+                  <div className="absolute bottom-0 left-8 transform translate-y-1/2">
+                    <div className="relative w-24 h-24 rounded-full border-4 border-background overflow-hidden">
+                      {currentUser.profileImage ? (
+                        <Image
+                          src={currentUser.profileImage.url}
+                          alt="Profile"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <span className="text-2xl font-semibold">
+                            {currentUser.firstName?.[0]}{currentUser.lastName?.[0]}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-20">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium">First Name</label>
+                      <Input value={currentUser.firstName || ''} disabled />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Last Name</label>
+                      <Input value={currentUser.lastName || ''} disabled />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Email</label>
+                      <Input value={currentUser.email} disabled />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Phone</label>
+                      <Input value={currentUser.phoneNumber || ''} disabled />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Designation</label>
+                      <Input value={currentUser.designation || ''} disabled />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Role</label>
+                      <Input value={currentUser.role?.name || ''} disabled className="capitalize" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium">Bio</label>
+                      <Textarea value={currentUser.bio || ''} disabled className="resize-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {currentUser.company && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Company Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 mb-8">
+                    {currentUser.company.logo && (
+                      <Image
+                        src={currentUser.company.logo.url}
+                        alt={currentUser.company.name}
+                        width={64}
+                        height={64}
+                        className="rounded-lg object-contain"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-lg font-medium">{currentUser.company.name}</h3>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {currentUser.company.description && (
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium">Description</label>
+                        <Textarea 
+                          value={currentUser.company.description} 
+                          disabled 
+                          className="resize-none mt-2 h-24"
+                        />
+                      </div>
+                    )}
+                    {currentUser.company.website && (
+                      <div>
+                        <label className="text-sm font-medium">Website</label>
+                        <div className="mt-2 relative">
+                          <Input 
+                            value={currentUser.company.website} 
+                            disabled 
+                            className="text-muted-foreground"
+                          />
+                          <a 
+                            href={currentUser.company.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 flex items-center px-3 text-primary hover:underline cursor-pointer"
+                          >
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {currentUser.role?.name === 'speaker' && currentUser.speakerSessions && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {currentUser.speakerSessions.map(session => (
+                    <div key={session.id} className="flex items-center justify-between border-b pb-4">
+                      <div>
+                        <h4 className="font-medium">{session.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(session.startTime), "PPP")} • {session.location.name}
+                        </p>
+                      </div>
+                      <Badge>{session.sessionType}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -216,13 +389,15 @@ export default function UsersPage() {
                     <TableHead className="w-[250px]">Name</TableHead>
                     <TableHead className="w-[250px]">Email</TableHead>
                     <TableHead className="w-[150px]">Phone</TableHead>
+                    <TableHead className="w-[100px]">Designation</TableHead>
                     <TableHead className="w-[100px]">Role</TableHead>
                     <TableHead>Company</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableSkeleton columns={5} rows={10} />
+                    <TableSkeleton columns={7} rows={10} />
                   ) : (
                     users.items.map((user: User) => (
                       <TableRow key={user.id}>
@@ -236,6 +411,7 @@ export default function UsersPage() {
                         </TableCell>
                         <TableCell className="truncate">{user.email}</TableCell>
                         <TableCell>{user.phoneNumber || '-'}</TableCell>
+                        <TableCell>{user.designation || '-'}</TableCell>
                         <TableCell className="capitalize">{user.role?.name || '-'}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -249,6 +425,17 @@ export default function UsersPage() {
                               />
                             )}
                             <span className="truncate">{user.company?.name || '-'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setViewId(user.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

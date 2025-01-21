@@ -36,4 +36,12 @@ export function useUsers({
       sortOrder
     })
   })
+}
+
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ['user', id],
+    queryFn: () => usersService.getUser(id),
+    enabled: !!id
+  })
 } 
