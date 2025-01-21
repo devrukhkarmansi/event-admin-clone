@@ -22,6 +22,7 @@ interface SponsorFormDialogProps {
 
 export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
   const [open, setOpen] = useState(false)
+  const [shouldRemoveLogo, setShouldRemoveLogo] = useState(false)
   const [logo, setLogo] = useState<{ file?: File; url?: string }>({
     url: sponsor?.logo?.url
   })
@@ -40,9 +41,11 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
 
   const handleLogoChange = (file: File | null) => {
     if (file) {
-      setLogo({ file, url: URL.createObjectURL(file) })
+      setLogo({ file })
+      setShouldRemoveLogo(false)
     } else {
       setLogo({})
+      setShouldRemoveLogo(mode === "edit" && !!sponsor?.logo)
     }
   }
 
@@ -69,7 +72,7 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
         name: formData.get('name') as string,
         type: formData.get('type') as SponsorType,
         description: formData.get('description') as string,
-        logoId
+        logoId: shouldRemoveLogo ? -1 : logoId
       }
 
       if (mode === 'edit' && sponsor) {
@@ -77,11 +80,23 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
           id: sponsor.id,
           ...sponsorData
         })
+
+        if (logo.file) {
+          const media = await uploadMedia.mutateAsync({
+            file: logo.file,
+            mediaType: MediaType.SPONSOR_LOGO
+          })
+          await updateSponsor.mutateAsync({
+            id: sponsor.id,
+            logoId: media.id
+          })
+        }
       } else {
         await createSponsor.mutateAsync(sponsorData)
       }
 
       setOpen(false)
+      setShouldRemoveLogo(false)
     } catch (error) {
       console.error(`Failed to ${mode} sponsor:`, error)
     }
