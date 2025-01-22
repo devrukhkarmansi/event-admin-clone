@@ -18,7 +18,7 @@ import { useState, useRef } from "react"
 import Image from "next/image"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { usersService } from "@/services/users/users.service"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { Pagination } from "@/components/ui/pagination"
 import { TableSkeleton } from "@/components/table-skeleton"
 import { Input } from "@/components/ui/input"
@@ -30,9 +30,21 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
+
 export default function UsersPage() {
   const [page, setPage] = useState(1)
-  const limit = 10
   const [filters, setFilters] = useState({
     search: "",
     role: "all",
@@ -41,7 +53,7 @@ export default function UsersPage() {
   })
   const { data: users, isLoading } = useUsers({
     page,
-    limit,
+    limit: 10,
     ...filters,
     role: filters.role === "all" ? undefined : filters.role,
   })
@@ -55,17 +67,17 @@ export default function UsersPage() {
   const importMutation = useMutation({
     mutationFn: (file: File) => usersService.importUsers(file),
     onSuccess: () => {
-      toast({
+      showToast(toast, {
         title: "Success",
         description: "Users imported successfully",
       })
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
     onError: (error: Error) => {
-      toast({
+      showToast(toast, {
         title: "Error",
         description: error.message || "Failed to import users",
-        variant: "destructive",
+        type: "error"
       })
     },
   })
@@ -444,14 +456,14 @@ export default function UsersPage() {
                 </TableBody>
               </Table>
 
-              {users && (
+              {users && users.meta && (
                 <div className="mt-4">
                   <Pagination
                     currentPage={page}
                     totalPages={users.meta.totalPages}
                     onPageChange={setPage}
                     totalItems={users.meta.totalItems}
-                    pageSize={limit}
+                    pageSize={10}
                   />
                 </div>
               )}

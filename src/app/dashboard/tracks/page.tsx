@@ -7,9 +7,22 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { Track } from "@/services/tracks/types"
 import { TableSkeleton } from "@/components/table-skeleton"
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
 
 export default function TracksPage() {
   const { data: tracks, isLoading } = useTracks()
@@ -22,14 +35,17 @@ export default function TracksPage() {
     
     try {
       await deleteTrack.mutateAsync(deleteId)
-      toast({ title: "Success", description: "Track deleted successfully" })
+      showToast(toast, {
+        title: "Success",
+        description: "Track deleted successfully"
+      })
       setDeleteId(null)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
+      showToast(toast, {
+        title: "Error",
         description: "Failed to delete track",
-        variant: "destructive"
+        type: "error"
       })
     }
   }

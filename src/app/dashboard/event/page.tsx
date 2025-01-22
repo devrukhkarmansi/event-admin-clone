@@ -17,6 +17,7 @@ import { useUploadMedia } from "@/hooks/use-media"
 import { MediaType } from "@/services/media/types"
 import { FileUpload } from "@/components/ui/file-upload"
 import { MarkdownContent } from "@/components/markdown-content"
+import type { ToastFunction } from "@/hooks/use-toast"
 
 
 interface FormData {
@@ -45,6 +46,19 @@ interface FloorPlanUpdate {
   label: string;
 }
 
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
+
 export default function EventPage() {
   const [isEditing, setIsEditing] = useState(false)
   const { data: event, isLoading: eventLoading } = useEvent()
@@ -71,15 +85,18 @@ export default function EventPage() {
   const updateMutation = useMutation({
     mutationFn: (data: UpdateEventParams) => eventsService.updateEvent(data),
     onSuccess: () => {
-      toast({ title: "Success", description: "Event updated successfully" })
+      showToast(toast, {
+        title: "Success",
+        description: "Event updated successfully"
+      })
       queryClient.invalidateQueries({ queryKey: ['event'] })
       setIsEditing(false)
     },
     onError: (error: Error) => {
-      toast({ 
+      showToast(toast, { 
         title: "Error", 
         description: error.message || "Failed to update event",
-        variant: "destructive"
+        type: "error"
       })
     }
   })
@@ -102,12 +119,16 @@ export default function EventPage() {
         ...prev,
         logo: { id, url }
       }))
+      showToast(toast, {
+        title: "Success",
+        description: "Logo uploaded successfully"
+      })
     } catch (error) {
       console.error('Failed to upload logo:', error)
-      toast({
+      showToast(toast, {
         title: "Error",
         description: "Failed to upload logo",
-        variant: "destructive"
+        type: "error"
       })
     } finally {
       setUploadingLogo(false)
@@ -207,6 +228,10 @@ export default function EventPage() {
               file: fp.file!,
               mediaType: MediaType.EVENT_FLOOR_PLAN
             });
+            showToast(toast, {
+              title: "Success",
+              description: "Floor plan uploaded successfully"
+            })
             return { ...fp, mediaId, url };
           })
       );
@@ -264,10 +289,10 @@ export default function EventPage() {
 
     } catch (error) {
       console.error('Failed to update event:', error);
-      toast({
+      showToast(toast, {
         title: "Error",
         description: "Failed to update event",
-        variant: "destructive"
+        type: "error"
       });
     }
   };

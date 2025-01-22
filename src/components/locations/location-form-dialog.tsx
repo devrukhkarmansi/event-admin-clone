@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Pencil } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { useCreateLocation, useUpdateLocation } from "@/hooks/use-locations"
 import { Location, CreateLocationParams } from "@/services/locations/types"
 import { FileUpload } from "@/components/ui/file-upload"
@@ -19,6 +19,19 @@ export interface LocationFormDialogProps {
   selectedFloorPlan: File | null
   floorPlanPreview?: string
   onFloorPlanSelect: (file: File | null) => void
+}
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
 }
 
 export function LocationFormDialog({ mode, location, selectedFloorPlan, floorPlanPreview, onFloorPlanSelect }: LocationFormDialogProps) {
@@ -72,8 +85,10 @@ export function LocationFormDialog({ mode, location, selectedFloorPlan, floorPla
             floorPlanId: media.id
           })
         }
-        toast({ title: "Success", description: "Location created successfully" })
-      } else {
+        showToast(toast, {
+          title: "Success",
+          description: "Location created successfully"
+        })      } else {
         await updateLocation.mutateAsync({ 
           id: location!.id, 
           ...formData,
@@ -89,17 +104,19 @@ export function LocationFormDialog({ mode, location, selectedFloorPlan, floorPla
             floorPlanId: media.id
           })
         }
-        toast({ title: "Success", description: "Location updated successfully" })
-      }
+        showToast(toast, {
+          title: "Success",
+          description: "Location updated successfully"
+        })      }
       setOpen(false)
       setShouldRemoveFloorPlan(false)
       onFloorPlanSelect(null)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive"
+      showToast(toast, {
+        title: "Error",
+        description: "Failed to upload floor plan",
+        type: "error"
       })
     }
   }

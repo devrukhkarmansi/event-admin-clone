@@ -32,8 +32,26 @@ export const usersService = {
     
   },
 
-  getUsers: (page = 1, limit = 10) => {
-    return api.get<UsersResponse>(`/admin/user?page=${page}&limit=${limit}`)
+  getUsers: ({ page = 1, limit = 10, search, role, sortBy, sortOrder }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }) => {
+    const params = new URLSearchParams()
+    
+    // Ensure page and limit are always sent
+    params.append('page', String(page))
+    params.append('limit', String(limit))
+    
+    if (search) params.append('search', search)
+    if (role) params.append('role', role)
+    if (sortBy) params.append('sortBy', sortBy)
+    if (sortOrder) params.append('sortOrder', sortOrder)
+
+    return api.get<UsersResponse>(`/admin/user?${params}`)
   },
 
   getUser: (id: string) => {

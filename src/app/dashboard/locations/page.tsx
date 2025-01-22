@@ -6,13 +6,28 @@ import { LocationFormDialog } from "@/components/locations/location-form-dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash2, Eye } from "lucide-react"
-import { useState, useEffect } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { Location } from "@/services/locations/types"
 import { TableSkeleton } from "@/components/table-skeleton"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
+
+console.log('Dialog component available:', !!Dialog)
 
 export default function LocationsPage() {
   const { data: locations, isLoading } = useLocations()
@@ -28,14 +43,17 @@ export default function LocationsPage() {
     
     try {
       await deleteLocation.mutateAsync(deleteId)
-      toast({ title: "Success", description: "Location deleted successfully" })
+      showToast(toast, {
+        title: "Success",
+        description: "Location deleted successfully"
+      })
       setDeleteId(null)
     } catch (error) {
-      console.error(error)
-      toast({ 
-        title: "Error", 
-        description: "Failed to delete location",
-        variant: "destructive"
+      console.error('Delete location error:', error)
+      showToast(toast, {
+        title: "Error",
+        description: "Failed to delete location. The location might be in use.",
+        type: "error"
       })
     }
   }
@@ -53,11 +71,10 @@ export default function LocationsPage() {
     }
   }
 
-  useEffect(() => {
-    if (locations?.find((location: Location) => location.id === deleteId)) {
-      setDeleteId(null)
-    }
-  }, [locations, deleteId])
+  const handleDeleteClick = (id: number) => {
+    console.log('Delete button clicked for location:', id)
+    setDeleteId(id)
+  }
 
   return (
     <div className="p-6">
@@ -140,7 +157,7 @@ export default function LocationsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setDeleteId(location.id)}
+                            onClick={() => handleDeleteClick(location.id)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -157,7 +174,7 @@ export default function LocationsPage() {
 
       <ConfirmDialog
         open={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
+        onOpenChange={(open) => !open && setDeleteId(null)}
         title="Delete Location"
         description="Are you sure you want to delete this location? This action cannot be undone."
         onConfirm={handleDelete}

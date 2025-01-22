@@ -14,10 +14,24 @@ import { MediaType } from "@/services/media/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { FileUpload } from "@/components/ui/file-upload"
 import { Label } from "@radix-ui/react-label"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 
 interface SponsorFormDialogProps {
   sponsor?: Sponsor  // Optional for create mode
   mode: 'create' | 'edit'
+}
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
 }
 
 export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
@@ -29,6 +43,7 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
   const createSponsor = useCreateSponsor()
   const updateSponsor = useUpdateSponsor()
   const uploadMedia = useUploadMedia()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!open) {
@@ -102,10 +117,19 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
         await createSponsor.mutateAsync(sponsorData)
       }
 
+      showToast(toast, {
+        title: "Success",
+        description: mode === 'edit' ? 'Sponsor updated successfully' : 'Sponsor created successfully',
+        type: "success"
+      })
       setOpen(false)
       setShouldRemoveLogo(false)
     } catch (error) {
-      console.error(`Failed to ${mode} sponsor:`, error)
+      showToast(toast, {
+        title: "Error",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        type: "error"
+      })
     }
   }
 

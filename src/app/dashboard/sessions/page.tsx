@@ -8,6 +8,7 @@ import { Trash2, Eye, ArrowLeft, Pencil, CalendarIcon, Plus, Search, Star } from
 import { Calendar } from "@/components/ui/calendar"
 import { useState, useEffect, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
+import type { ToastFunction } from "@/hooks/use-toast"
 import { CreateSessionParams, DifficultyLevel, Session, SessionType } from "@/services/sessions/types"
 import { format } from "date-fns"
 import Image from "next/image"
@@ -31,6 +32,19 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Combobox } from '@/components/ui/combobox'
 import { useDebounce } from '@/hooks/use-debounce'
 import React from "react"
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: {
+  title: string,
+  description: string,
+  type?: "success" | "error"
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
 
 export default function SessionsPage() {
   const searchParams = useSearchParams()
@@ -202,10 +216,10 @@ export default function SessionsPage() {
         if (!formData.trackId) missingFields.push("Track");
         
         if (missingFields.length > 0) {
-          toast({ 
-            title: "Validation Error", 
+          showToast(toast, {
+            title: "Validation Error",
             description: `${missingFields.join(", ")} ${missingFields.length > 1 ? "are" : "is"} required for published sessions`,
-            variant: "destructive"
+            type: "error"
           })
           return
         }
@@ -238,9 +252,16 @@ export default function SessionsPage() {
             id: newSession.id, 
             bannerId: media.id
           })
+          showToast(toast, {
+            title: "Success",
+            description: "Session banner uploaded successfully"
+          })
         }
         
-        toast({ title: "Success", description: "Session created successfully" })
+        showToast(toast, {
+          title: "Success",
+          description: "Session created successfully"
+        })
         setIsAdding(false)
         setViewId(null)
       } else {
@@ -258,20 +279,27 @@ export default function SessionsPage() {
             id: currentSession!.id,
             bannerId: media.id
           })
+          showToast(toast, {
+            title: "Success",
+            description: "Session banner updated successfully"
+          })
         }
         
         setIsEditing(false)
         await refetch()
-        toast({ title: "Success", description: "Session updated successfully" })
+        showToast(toast, {
+          title: "Success",
+          description: "Session updated successfully"
+        })
       }
       setSelectedBanner(null)
       setBannerPreview(undefined)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
+      showToast(toast, {
+        title: "Error",
         description: "Failed to save session",
-        variant: "destructive"
+        type: "error"
       })
     }
   }
@@ -281,14 +309,17 @@ export default function SessionsPage() {
     
     try {
       await deleteSession.mutateAsync(deleteId)
-      toast({ title: "Success", description: "Session deleted successfully" })
+      showToast(toast, {
+        title: "Success",
+        description: "Session deleted successfully"
+      })
       setDeleteId(null)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
+      showToast(toast, {
+        title: "Error",
         description: "Failed to delete session",
-        variant: "destructive"
+        type: "error"
       })
     }
   }

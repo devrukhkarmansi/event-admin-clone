@@ -190,3 +190,5 @@ function useToast() {
 }
 
 export { useToast, toast }
+
+export type ToastFunction = ReturnType<typeof useToast>["toast"]
