@@ -13,21 +13,22 @@ export enum DifficultyLevel {
 export interface Session {
   id: number
   title: string
-  description: string
-  sessionType: SessionType
-  startTime: string
-  endTime: string
-  locationId: number
-  capacity: number
-  difficultyLevel: DifficultyLevel
-  status: string
-  isHighlighted: boolean
-  trackId?: number
+  description?: string
+  sessionType?: SessionType
+  startTime?: string | ""
+  endTime?: string | ""
+  locationId?: number | null
+  capacity?: number | 0
+  difficultyLevel?: DifficultyLevel | ""
+  status?: string | "draft"
+  isHighlighted?: boolean | null
+  trackId?: number | null
   tracks?: {
     id: number
     name: string
     description: string
   }[]
+  speakerId?: string | undefined
   speaker?: {
     id: string
     firstName: string
@@ -46,6 +47,7 @@ export interface Session {
     floor: string
     building: string
   }
+  bannerId?: number | null
   banner?: {
     url: string
   }
@@ -53,20 +55,20 @@ export interface Session {
 
 export interface CreateSessionParams {
   title: string
-  description: string
-  sessionType: SessionType
-  startTime: string
-  endTime: string
-  locationId: number
-  capacity: number
-  difficultyLevel: DifficultyLevel
-  speakerId: string
-  trackId?: number
+  description?: string
+  sessionType?: SessionType
+  startTime?: string | ""
+  endTime?: string | ""
+  locationId?: number | null
+  capacity?: number | 0
+  difficultyLevel?: DifficultyLevel | ""
+  speakerId?: string | undefined
+  trackId?: number | null
   bannerImage?: {
     url: string
   }
-  status?: string
-  isHighlighted?: boolean
+  status?: string | "draft"
+  isHighlighted?: boolean | null
 }
 
 export interface UpdateSessionParams extends Partial<CreateSessionParams> {

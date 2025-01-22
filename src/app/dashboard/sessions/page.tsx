@@ -28,6 +28,9 @@ import { MarkdownContent } from "@/components/markdown-content"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { Combobox } from '@/components/ui/combobox'
+import { useDebounce } from '@/hooks/use-debounce'
+import React from "react"
 
 export default function SessionsPage() {
   const searchParams = useSearchParams()
@@ -87,12 +90,28 @@ export default function SessionsPage() {
   const createSession = useCreateSession()
   const { toast } = useToast()
   const { data: tracks } = useTracks()
-  const { data: users } = useUsers()
   const { data: locations } = useLocations()
   const uploadMedia = useUploadMedia()
   const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | undefined>(undefined)
   const [isFiltersOpen, setIsFiltersOpen] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const debouncedQuery = useDebounce(searchQuery, 300)
+
+  const { data: filteredUsers, isLoading: isUsersLoading } = useUsers({
+    search: debouncedQuery,
+    page: 1,
+    limit: 10
+  })
+
+  const speakerOptions = React.useMemo(() => 
+    (filteredUsers?.items || []).map(user => ({
+      label: `${user.firstName} ${user.lastName}`,
+      value: user.id.toString(),
+      description: user.email
+    })), 
+    [filteredUsers?.items]
+  )
 
   const emptySession = useMemo(() => ({
     title: "",
@@ -100,8 +119,8 @@ export default function SessionsPage() {
     sessionType: SessionType.TALK,
     startTime: "",
     endTime: "",
-    locationId: 0,
-    capacity: 50,
+    locationId: undefined,
+    capacity: 0,
     difficultyLevel: DifficultyLevel.BEGINNER,
     speakerId: "",
     trackId: undefined,
@@ -127,17 +146,17 @@ export default function SessionsPage() {
     if (currentSession && !isAdding) {
       setFormData({
         title: currentSession.title,
-        description: currentSession.description,
-        sessionType: currentSession.sessionType,
-        startTime: currentSession.startTime,
-        endTime: currentSession.endTime,
+        description: currentSession.description || "",
+        sessionType: currentSession.sessionType || SessionType.TALK,
+        startTime: currentSession.startTime || "",
+        endTime: currentSession.endTime || "",
         locationId: currentSession.locationId,
-        capacity: currentSession.capacity,
-        difficultyLevel: currentSession.difficultyLevel,
+        capacity: currentSession.capacity || 0,
+        difficultyLevel: currentSession.difficultyLevel || DifficultyLevel.BEGINNER,
         speakerId: currentSession.speaker?.id || "",
         trackId: currentSession.tracks?.[0]?.id,
-        status: currentSession.status,
-        isHighlighted: currentSession.isHighlighted,
+        status: currentSession.status || "",
+        isHighlighted: currentSession.isHighlighted || false,
       })
       if (currentSession.banner?.url) {
         setBannerPreview(currentSession.banner.url)
@@ -147,6 +166,19 @@ export default function SessionsPage() {
       setBannerPreview(undefined)
     }
   }, [currentSession, isAdding, emptySession])
+
+  useEffect(() => {
+    if (isAdding) {
+      setFormData(emptySession)
+    } else if (currentSession && isEditing) {
+      setFormData({
+        ...currentSession,
+        speakerId: currentSession.speaker?.id || undefined,
+        locationId: currentSession.location?.id || undefined,
+        trackId: currentSession.tracks?.[0]?.id || undefined
+      })
+    }
+  }, [isAdding, isEditing, currentSession, emptySession])
 
   const handleBannerSelect = (file: File | null) => {
     setSelectedBanner(file)
@@ -179,8 +211,23 @@ export default function SessionsPage() {
         }
       }
 
+      // Clean up the data before sending to API
+      const cleanFormData = {
+        title: formData.title,
+        description: formData.description,
+        sessionType: formData.sessionType,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        capacity: formData.capacity,
+        difficultyLevel: formData.difficultyLevel,
+        status: formData.status,
+        isHighlighted: formData.isHighlighted,
+        locationId: formData.locationId,
+        speakerId: formData.speakerId || undefined,
+      }
+
       if (isAdding) {
-        const newSession = await createSession.mutateAsync(formData)
+        const newSession = await createSession.mutateAsync(cleanFormData)
         
         if (selectedBanner) {
           const media = await uploadMedia.mutateAsync({ 
@@ -199,7 +246,7 @@ export default function SessionsPage() {
       } else {
         await updateSession.mutateAsync({ 
           id: currentSession!.id, 
-          ...formData
+          ...cleanFormData
         })
         
         if (selectedBanner) {
@@ -545,22 +592,29 @@ export default function SessionsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-medium">Speaker</label>
-                  <Select
-                    value={formData.speakerId}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, speakerId: value }))}
-                    disabled={!isEditing && !isAdding}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select speaker" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users?.items.map(user => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.firstName} {user.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {(isEditing || isAdding) ? (
+                    <Combobox
+                      options={speakerOptions}
+                      value={formData.speakerId}
+                      onChange={(value) => {
+                        setFormData(prev => ({ ...prev, speakerId: value }))
+                      }}
+                      placeholder="Search for a speaker..."
+                      loading={isUsersLoading}
+                      onSearch={setSearchQuery}
+                    />
+                  ) : currentSession?.speaker ? (
+                    <div className="p-2 rounded-md border">
+                      <p className="font-medium">
+                        {currentSession.speaker.firstName} {currentSession.speaker.lastName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {currentSession.speaker.email}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-2">No speaker assigned</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium">Location</label>
@@ -749,28 +803,6 @@ export default function SessionsPage() {
                       {tracks?.map(track => (
                         <SelectItem key={track.id} value={track.id.toString()}>
                           {track.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Speaker</label>
-                  <Select
-                    value={filters.speakerId}
-                    onValueChange={(value) => setFilters(prev => ({ 
-                      ...prev, 
-                      speakerId: value as string | "all"
-                    }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All speakers" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All speakers</SelectItem>
-                      {users?.items.map(user => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.firstName} {user.lastName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1016,13 +1048,13 @@ export default function SessionsPage() {
                       </td>
                       <td className="p-4">{session.tracks?.[0]?.name || '-'}</td>
                       <td className="p-4">
-                        <span className="capitalize">{session.sessionType.toLowerCase()}</span>
+                        <span className="capitalize">{session.sessionType?.toLowerCase()}</span>
                       </td>
                       <td className="p-4">
-                        {format(new Date(session.startTime), 'MMM d, yyyy HH:mm')}
+                        {session.startTime ? format(new Date(session.startTime), 'MMM d, yyyy HH:mm') : '-'}
                       </td>
                       <td className="p-4">
-                        <span className="capitalize">{session.difficultyLevel.toLowerCase()}</span>
+                        <span className="capitalize">{session.difficultyLevel?.toLowerCase() || '-'}</span>
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
