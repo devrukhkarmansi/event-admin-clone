@@ -20,6 +20,6 @@ export const locationsService = {
   },
 
   deleteLocation: (id: number) => {
-    return api.delete<void>(`/admin/location/${id}`).then(() => undefined)
+    return api.delete<void>(`/admin/location/${id}`)
   }
 } 

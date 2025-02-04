@@ -1,10 +1,47 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { usersService } from "@/services/users/users.service"
 
-export function useUsers(page = 1, limit = 10) {
+interface UseUsersParams {
+  page?: number
+  limit?: number
+  search?: string
+  role?: string
+  sortBy?: string
+  sortOrder?: "ASC" | "DESC"
+}
+
+export function useUsers({
+  page = 1,
+  limit = 10,
+  search,
+  role,
+  sortBy = "createdAt",
+  sortOrder = "DESC"
+}: UseUsersParams = {}) {
   return useQuery({
-    queryKey: ['users', page, limit],
-    queryFn: () => usersService.getUsers(page, limit),
-    placeholderData: keepPreviousData
+    queryKey: ['users', { 
+      page, 
+      limit,
+      search,
+      role,
+      sortBy,
+      sortOrder
+    }],
+    queryFn: () => usersService.findAll({ 
+      page, 
+      limit, 
+      search,
+      role,
+      sortBy,
+      sortOrder
+    })
+  })
+}
+
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ['user', id],
+    queryFn: () => usersService.getUser(id),
+    enabled: !!id
   })
 } 

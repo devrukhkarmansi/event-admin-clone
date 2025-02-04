@@ -6,13 +6,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Pencil } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { useCreateTrack, useUpdateTrack } from "@/hooks/use-tracks"
 import { Track } from "@/services/tracks/types"
 
 interface TrackFormDialogProps {
   mode: "create" | "edit"
   track?: Track
+}
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
 }
 
 export function TrackFormDialog({ mode, track }: TrackFormDialogProps) {
@@ -30,18 +43,24 @@ export function TrackFormDialog({ mode, track }: TrackFormDialogProps) {
     try {
       if (mode === "create") {
         await createTrack.mutateAsync({ name, description })
-        toast({ title: "Success", description: "Track created successfully" })
+        showToast(toast, {
+          title: "Success",
+          description: "Track created successfully"
+        })
       } else {
         await updateTrack.mutateAsync({ id: track!.id, name, description })
-        toast({ title: "Success", description: "Track updated successfully" })
+        showToast(toast, {
+          title: "Success",
+          description: "Track updated successfully"
+        })
       }
       setOpen(false)
       resetForm()
     } catch (error) {
-      toast({ 
-        title: "Error", 
+      showToast(toast, {
+        title: "Error",
         description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive"
+        type: "error"
       })
     }
   }

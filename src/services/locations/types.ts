@@ -5,6 +5,9 @@ export interface Location {
   capacity: number
   floor: string
   building: string
+  floorPlan?: {
+    url: string
+  }
 }
 
 export interface CreateLocationParams {
@@ -13,6 +16,7 @@ export interface CreateLocationParams {
   capacity: number
   floor: string
   building: string
+  floorPlanId?: number
 }
 
 export interface UpdateLocationParams extends Partial<CreateLocationParams> {

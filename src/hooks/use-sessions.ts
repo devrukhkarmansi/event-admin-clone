@@ -45,4 +45,11 @@ export const useDeleteSession = () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
     }
   })
+}
+
+export const useHighlightedSessions = (limit: number = 4) => {
+  return useQuery({
+    queryKey: ['sessions', 'highlighted', limit],
+    queryFn: () => sessionsService.getSessions({ isHighlighted: true, limit }),
+  })
 } 

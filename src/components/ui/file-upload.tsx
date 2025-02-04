@@ -10,7 +10,8 @@ import { X } from "lucide-react"
 interface FileUploadProps {
   onChange: (file: File | null) => void
   accept?: string
-  value?: string
+  value?: string | string[]
+  multiple?: boolean
   loading?: boolean
   className?: string
   disabled?: boolean
@@ -18,6 +19,7 @@ interface FileUploadProps {
 
 export function FileUpload({
   onChange,
+  multiple = false,
   accept = "image/*",
   value,
   loading,
@@ -27,13 +29,23 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
 
-  const handleFileChange = (file: File) => {
-    if (file && file.type.startsWith("image/")) {
-      onChange(file)
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
+  const handleFileChange = (files: FileList | null) => {
+    if (!files?.length) {
+      onChange(null)
+      return
     }
+
+    const fileArray = Array.from(files).filter(file => 
+      file.type.startsWith("image/")
+    )
+
+    if (!fileArray.length) {
+      onChange(null)
+      return
+    }
+
+    // If multiple, handle in parent component
+    onChange(fileArray[0])
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -53,13 +65,7 @@ export function FileUpload({
     
     if (disabled) return
 
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith("image/")) {
-      onChange(file)
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
-    }
+    handleFileChange(e.dataTransfer.files)
   }
 
   return (
@@ -78,30 +84,35 @@ export function FileUpload({
         ref={inputRef}
         type="file"
         accept={accept}
-        onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
+        multiple={multiple}
+        onChange={(e) => handleFileChange(e.target.files)}
         className="hidden"
         disabled={disabled || loading}
       />
 
       {value ? (
-        <div className="relative h-32 w-32">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={value}
-            alt="Preview"
-            className="h-full w-full rounded-lg object-cover"
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="absolute -right-2 -top-2 h-6 w-6 rounded-full shadow-lg hover:bg-destructive hover:text-destructive-foreground"
-            onClick={() => onChange(null)}
-            disabled={disabled || loading}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Remove image</span>
-          </Button>
+        <div className={cn("w-full", multiple ? "grid grid-cols-2 gap-4" : "relative h-32")}>
+          {(Array.isArray(value) ? value : [value]).map((url, i) => (
+            <div key={i} className="relative h-32">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt="Preview"
+                className="h-full w-full rounded-lg object-cover"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="absolute -right-2 -top-2 h-6 w-6 rounded-full shadow-lg hover:bg-destructive hover:text-destructive-foreground"
+                onClick={() => onChange(null)}
+                disabled={disabled || loading}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Remove image</span>
+              </Button>
+            </div>
+          ))}
         </div>
       ) : (
         <>
@@ -126,7 +137,7 @@ export function FileUpload({
             onClick={() => inputRef.current?.click()}
             disabled={disabled || loading}
           >
-            Select File
+            Select File{multiple && 's'}
           </Button>
         </>
       )}

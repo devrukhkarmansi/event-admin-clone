@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, Calendar, Users, LayoutGrid, Settings, LogOut, GitBranch, MapPin, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react"
+import { Calendar, Users, Settings, LogOut, GitBranch, MapPin, ChevronLeft, ChevronRight, MoreVertical, UserCheck, LayoutDashboard, CalendarDays, LayoutList, Award } from "lucide-react"
 import { SidebarHeader, SidebarNav, SidebarNavItem } from "@/components/ui/sidebar"
 import { FloatingThemeToggle as ThemeToggle } from "@/components/floating-theme-toggle"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -18,12 +18,12 @@ const NAVIGATION_ITEMS = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: Home
+    icon: LayoutDashboard
   },
   {
-    title: "Event & Sponsors",
+    title: "Event",
     href: "/dashboard/event",
-    icon: Calendar
+    icon: CalendarDays
   },
   {
     title: "Tracks",
@@ -33,7 +33,7 @@ const NAVIGATION_ITEMS = [
   {
     title: "Sessions",
     href: "/dashboard/sessions",
-    icon: LayoutGrid
+    icon: LayoutList
   },
   {
     title: "Users",
@@ -46,9 +46,14 @@ const NAVIGATION_ITEMS = [
     icon: MapPin
   },
   {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings
+    title: "Check-ins",
+    href: "/dashboard/check-ins",
+    icon: UserCheck
+  },
+  {
+    title: "Sponsors",
+    href: "/dashboard/sponsors",
+    icon: Award
   }
 ]
 

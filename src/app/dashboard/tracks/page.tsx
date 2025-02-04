@@ -3,13 +3,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTracks, useDeleteTrack } from "@/hooks/use-tracks"
 import { TrackFormDialog } from "@/components/tracks/track-form-dialog"
-import { LoadingScreen } from "@/components/ui/loading-screen"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { Track } from "@/services/tracks/types"
+import { TableSkeleton } from "@/components/table-skeleton"
+
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
 
 export default function TracksPage() {
   const { data: tracks, isLoading } = useTracks()
@@ -22,14 +35,17 @@ export default function TracksPage() {
     
     try {
       await deleteTrack.mutateAsync(deleteId)
-      toast({ title: "Success", description: "Track deleted successfully" })
+      showToast(toast, {
+        title: "Success",
+        description: "Track deleted successfully"
+      })
       setDeleteId(null)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
+      showToast(toast, {
+        title: "Error",
         description: "Failed to delete track",
-        variant: "destructive"
+        type: "error"
       })
     }
   }
@@ -40,26 +56,26 @@ export default function TracksPage() {
         <h1 className="text-2xl font-bold">Tracks</h1>
       </div>
 
-      {isLoading ? (
-        <LoadingScreen />
-      ) : (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>All Tracks</CardTitle>
-            <TrackFormDialog mode="create" />
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium">Name</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium">Description</th>
-                    <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tracks?.map((track: Track) => (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>All Tracks</CardTitle>
+          <TrackFormDialog mode="create" />
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="h-12 px-4 text-left align-middle font-medium">Name</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">Description</th>
+                  <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <TableSkeleton columns={4} rows={10} />
+                ) : (
+                  tracks?.map((track: Track) => (
                     <tr key={track.id} className="border-b">
                       <td className="p-4">{track.name}</td>
                       <td className="p-4">{track.description}</td>
@@ -76,13 +92,13 @@ export default function TracksPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={!!deleteId}

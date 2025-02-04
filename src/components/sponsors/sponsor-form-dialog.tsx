@@ -14,20 +14,36 @@ import { MediaType } from "@/services/media/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { FileUpload } from "@/components/ui/file-upload"
 import { Label } from "@radix-ui/react-label"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 
 interface SponsorFormDialogProps {
   sponsor?: Sponsor  // Optional for create mode
   mode: 'create' | 'edit'
 }
 
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
+
 export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
   const [open, setOpen] = useState(false)
+  const [shouldRemoveLogo, setShouldRemoveLogo] = useState(false)
   const [logo, setLogo] = useState<{ file?: File; url?: string }>({
     url: sponsor?.logo?.url
   })
   const createSponsor = useCreateSponsor()
   const updateSponsor = useUpdateSponsor()
   const uploadMedia = useUploadMedia()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!open) {
@@ -40,9 +56,18 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
 
   const handleLogoChange = (file: File | null) => {
     if (file) {
-      setLogo({ file, url: URL.createObjectURL(file) })
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogo({ 
+          file,
+          url: reader.result as string 
+        })
+      }
+      reader.readAsDataURL(file)
+      setShouldRemoveLogo(false)
     } else {
       setLogo({})
+      setShouldRemoveLogo(mode === "edit" && !!sponsor?.logo)
     }
   }
 
@@ -69,7 +94,7 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
         name: formData.get('name') as string,
         type: formData.get('type') as SponsorType,
         description: formData.get('description') as string,
-        logoId
+        logoId: shouldRemoveLogo ? -1 : logoId
       }
 
       if (mode === 'edit' && sponsor) {
@@ -77,13 +102,34 @@ export function SponsorFormDialog({ sponsor, mode }: SponsorFormDialogProps) {
           id: sponsor.id,
           ...sponsorData
         })
+
+        if (logo.file) {
+          const media = await uploadMedia.mutateAsync({
+            file: logo.file,
+            mediaType: MediaType.SPONSOR_LOGO
+          })
+          await updateSponsor.mutateAsync({
+            id: sponsor.id,
+            logoId: media.id
+          })
+        }
       } else {
         await createSponsor.mutateAsync(sponsorData)
       }
 
+      showToast(toast, {
+        title: "Success",
+        description: mode === 'edit' ? 'Sponsor updated successfully' : 'Sponsor created successfully',
+        type: "success"
+      })
       setOpen(false)
+      setShouldRemoveLogo(false)
     } catch (error) {
-      console.error(`Failed to ${mode} sponsor:`, error)
+      showToast(toast, {
+        title: "Error",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        type: "error"
+      })
     }
   }
 

@@ -1,52 +1,122 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Pencil } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, type ToastFunction } from "@/hooks/use-toast"
 import { useCreateLocation, useUpdateLocation } from "@/hooks/use-locations"
 import { Location, CreateLocationParams } from "@/services/locations/types"
+import { FileUpload } from "@/components/ui/file-upload"
+import { useUploadMedia } from "@/hooks/use-media"
+import { MediaType } from "@/services/media/types"
 
-interface LocationFormDialogProps {
+export interface LocationFormDialogProps {
   mode: "create" | "edit"
   location?: Location
+  selectedFloorPlan: File | null
+  floorPlanPreview?: string
+  onFloorPlanSelect: (file: File | null) => void
 }
 
-export function LocationFormDialog({ mode, location }: LocationFormDialogProps) {
+const showToast = (toast: ToastFunction, { title, description, type = "success" }: { 
+  title: string, 
+  description: string, 
+  type?: "success" | "error" 
+}) => {
+  toast({
+    title,
+    description,
+    variant: type === "error" ? "destructive" : "default",
+    duration: 3000,
+  })
+}
+
+export function LocationFormDialog({ mode, location, selectedFloorPlan, floorPlanPreview, onFloorPlanSelect }: LocationFormDialogProps) {
   const [open, setOpen] = useState(false)
+  const [shouldRemoveFloorPlan, setShouldRemoveFloorPlan] = useState(false)
+  const [showExistingFloorPlan, setShowExistingFloorPlan] = useState(true)
   const [formData, setFormData] = useState<CreateLocationParams>({
     name: location?.name || "",
     description: location?.description || "",
     capacity: location?.capacity || 0,
     floor: location?.floor || "",
-    building: location?.building || ""
+    building: location?.building || "",
   })
 
   const { toast } = useToast()
   const createLocation = useCreateLocation()
   const updateLocation = useUpdateLocation()
+  const uploadMedia = useUploadMedia()
+
+  const handleFloorPlanChange = (file: File | null) => {
+    onFloorPlanSelect(file)
+    if (!file) {
+      setShouldRemoveFloorPlan(true)
+      setShowExistingFloorPlan(false)
+    } else {
+      setShouldRemoveFloorPlan(false)
+      setShowExistingFloorPlan(false)
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
+      setShowExistingFloorPlan(true)
+      setShouldRemoveFloorPlan(false)
+    }
+  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     try {
       if (mode === "create") {
-        await createLocation.mutateAsync(formData)
-        toast({ title: "Success", description: "Location created successfully" })
-      } else {
-        await updateLocation.mutateAsync({ id: location!.id, ...formData })
-        toast({ title: "Success", description: "Location updated successfully" })
-      }
+        const newLocation = await createLocation.mutateAsync(formData)
+        if (selectedFloorPlan) {
+          const media = await uploadMedia.mutateAsync({ 
+            file: selectedFloorPlan, 
+            mediaType: MediaType.LOCATION_FLOOR_PLAN 
+          })
+          await updateLocation.mutateAsync({ 
+            id: newLocation.id, 
+            floorPlanId: media.id
+          })
+        }
+        showToast(toast, {
+          title: "Success",
+          description: "Location created successfully"
+        })      } else {
+        await updateLocation.mutateAsync({ 
+          id: location!.id, 
+          ...formData,
+          floorPlanId: shouldRemoveFloorPlan ? -1 : undefined
+        })
+        if (selectedFloorPlan) {
+          const media = await uploadMedia.mutateAsync({ 
+            file: selectedFloorPlan, 
+            mediaType: MediaType.LOCATION_FLOOR_PLAN 
+          })
+          await updateLocation.mutateAsync({ 
+            id: location!.id,
+            floorPlanId: media.id
+          })
+        }
+        showToast(toast, {
+          title: "Success",
+          description: "Location updated successfully"
+        })      }
       setOpen(false)
+      setShouldRemoveFloorPlan(false)
+      onFloorPlanSelect(null)
     } catch (error) {
       console.error(error)
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive"
+      showToast(toast, {
+        title: "Error",
+        description: "Failed to upload floor plan",
+        type: "error"
       })
     }
   }
@@ -119,6 +189,24 @@ export function LocationFormDialog({ mode, location }: LocationFormDialogProps) 
                 required
               />
             </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Floor Plan</label>
+            {!open ? null : (
+              <>
+                <FileUpload
+                  accept="image/*"
+                  onChange={handleFloorPlanChange}
+                  value={floorPlanPreview || (mode === "edit" && showExistingFloorPlan ? location?.floorPlan?.url : undefined)}
+                  className="mt-2"
+                />
+                {mode === "edit" && location?.floorPlan ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload new floor plan to replace the current one
+                  </p>
+                ) : null}
+              </>
+            )}
           </div>
           <div className="flex justify-end gap-2">
             <Button
