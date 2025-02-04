@@ -1,42 +1,41 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useUsers } from "@/hooks/use-users"
-import { useSessions, useHighlightedSessions } from "@/hooks/use-sessions"
-import { Users, Calendar, UserCheck, Star } from "lucide-react"
-import { useCheckInCount } from "@/hooks/use-check-ins"
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import Link from "next/link"
-import Image from "next/image"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUsers } from "@/hooks/use-users";
+import { useSessions, useHighlightedSessions } from "@/hooks/use-sessions";
+import { Users, Calendar, UserCheck, Star } from "lucide-react";
+import { useCheckInCount } from "@/hooks/use-check-ins";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import Link from "next/link";
+import Image from "next/image";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel"
+} from "@/components/ui/carousel";
 
 export default function DashboardPage() {
-  const { data: users } = useUsers()
-  const { data: sessions } = useSessions({})
-  const { data: checkIns } = useCheckInCount()
-  const router = useRouter()
-  const { data: highlightedSessions } = useHighlightedSessions(6)
+  const { data: users } = useUsers();
+  const { data: sessions } = useSessions({});
+  const { data: checkIns } = useCheckInCount();
+  const router = useRouter();
+  const { data: highlightedSessions } = useHighlightedSessions(6);
 
   return (
     <div className="p-8 space-y-8">
-
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card 
+        <Card
           className={cn(
             "cursor-pointer transition-colors",
             "transform hover:scale-[1.02] transition-transform",
             "relative overflow-hidden"
           )}
-          onClick={() => router.push('/dashboard/users')}
+          onClick={() => router.push("/dashboard/users")}
         >
           <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/10 to-transparent" />
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10" />
@@ -45,25 +44,29 @@ export default function DashboardPage() {
             <Users className="h-8 w-8 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users?.meta.totalItems || 0}</div>
+            <div className="text-2xl font-bold">
+              {users?.meta.totalItems || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               Total registered users
             </p>
           </CardContent>
         </Card>
-        
+
         <Card
           className={cn(
             "cursor-pointer transition-colors",
             "transform hover:scale-[1.02] transition-transform",
             "relative overflow-hidden"
           )}
-          onClick={() => router.push('/dashboard/check-ins')}
+          onClick={() => router.push("/dashboard/check-ins")}
         >
           <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-green-500/10 to-transparent" />
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-green-500/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s Check-ins</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Today&apos;s Check-ins
+            </CardTitle>
             <UserCheck className="h-8 w-8 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -73,23 +76,27 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card
           className={cn(
             "cursor-pointer transition-colors",
             "transform hover:scale-[1.02] transition-transform",
             "relative overflow-hidden"
           )}
-          onClick={() => router.push('/dashboard/sessions')}
+          onClick={() => router.push("/dashboard/sessions")}
         >
           <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-blue-500/10 to-transparent" />
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Sessions
+            </CardTitle>
             <Calendar className="h-8 w-8 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sessions?.meta.totalItems || 0}</div>
+            <div className="text-2xl font-bold">
+              {sessions?.meta.totalItems || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               Total scheduled sessions
             </p>
@@ -115,8 +122,11 @@ export default function DashboardPage() {
             >
               <CarouselContent>
                 {(highlightedSessions?.items || []).map((session) => (
-                  <CarouselItem key={session.id} className="basis-full md:basis-1/2 lg:basis-1/3">
-                    <Link 
+                  <CarouselItem
+                    key={session.id}
+                    className="basis-full md:basis-1/2 lg:basis-1/3"
+                  >
+                    <Link
                       href={`/dashboard/sessions?viewId=${session.id}`}
                       className="group block relative overflow-hidden rounded-lg m-2 hover:ring-2 hover:ring-primary transition-all"
                     >
@@ -140,11 +150,14 @@ export default function DashboardPage() {
                         </h3>
                         <div className="mt-2 flex flex-wrap gap-2 text-sm text-muted-foreground">
                           <span className="capitalize">
-                            {session.sessionType.toLowerCase()}
+                            {session.sessionType?.toLowerCase() || "-"}
                           </span>
                           <span>•</span>
                           <span>
-                            {format(new Date(session.startTime), 'MMM d, HH:mm')}
+                            {format(
+                              new Date(session.startTime || ""),
+                              "MMM d, HH:mm"
+                            )}
                           </span>
                         </div>
                       </div>
@@ -163,5 +176,5 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
-  )
-} 
+  );
+}
