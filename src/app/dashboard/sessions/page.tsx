@@ -294,7 +294,8 @@ export default function SessionsPage() {
         status: formData.status,
         isHighlighted: formData.isHighlighted,
         locationId: formData.locationId,
-        speakerId: formData.speakerId || undefined,
+        speakerId: formData.speakerId,
+        trackId: formData.trackId,
       };
 
       if (isAdding) {
