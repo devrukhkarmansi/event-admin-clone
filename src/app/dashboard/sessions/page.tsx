@@ -66,6 +66,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Combobox } from "@/components/ui/combobox";
 import { useDebounce } from "@/hooks/use-debounce";
 import React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const showToast = (
   toast: ToastFunction,
@@ -160,6 +161,7 @@ export default function SessionsPage() {
   );
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
   const debouncedQuery = useDebounce(searchQuery, 300);
 
   const { data: filteredUsers, isLoading: isUsersLoading } = useUsers({
@@ -248,6 +250,13 @@ export default function SessionsPage() {
       });
     }
   }, [isAdding, isEditing, currentSession, emptySession]);
+
+  useEffect(() => {
+    if (!isAdding && !currentSession) {
+      setSearchQuery("");
+      queryClient.invalidateQueries({ queryKey: ["users", "search"] });
+    }
+  }, [isAdding, currentSession, queryClient]);
 
   const handleBannerSelect = (file: File | null) => {
     setSelectedBanner(file);
