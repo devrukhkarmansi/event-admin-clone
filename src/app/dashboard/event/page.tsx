@@ -607,26 +607,28 @@ export default function EventPage() {
       </div>
 
       <Dialog open={showFloorPlans} onOpenChange={setShowFloorPlans}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-none">
             <DialogTitle>Event Floor Plans</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {event?.floorPlans?.map((floorPlan) => (
-              <div key={floorPlan.id} className="space-y-2">
-                <div className="relative aspect-video rounded-lg overflow-hidden border">
-                  <Image
-                    src={floorPlan.media.url}
-                    alt={floorPlan.label}
-                    fill
-                    className="object-cover"
-                  />
+          <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {event?.floorPlans?.map((floorPlan) => (
+                <div key={floorPlan.id} className="space-y-2">
+                  <div className="relative aspect-video rounded-lg overflow-hidden border">
+                    <Image
+                      src={floorPlan.media.url}
+                      alt={floorPlan.label}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="text-sm font-medium text-center">
+                    {floorPlan.label}
+                  </p>
                 </div>
-                <p className="text-sm font-medium text-center">
-                  {floorPlan.label}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
